@@ -1,6 +1,6 @@
 # Atlas — the Oxy App Store
 
-Expo / React Native frontend for the Oxy app store, at **apps.oxy.so**. Generated
+Expo / React Native frontend for the Oxy app store, at **atlas.oxy.so**. Generated
 with `create-oxy-app --no-backend`.
 
 ## Atlas has no backend, and that is the point
