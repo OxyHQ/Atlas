@@ -1,0 +1,49 @@
+name: Deploy to Cloudflare Pages
+
+# Atlas is a frontend and nothing else. Its data comes from oxy-api, which is
+# deployed from OxyHQServices, so there is no backend here to build, no image to
+# push and no ECS service to wait on — a web export and a Pages deploy is the
+# whole of it.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-atlas
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: production
+    permissions:
+      contents: read
+      deployments: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.14
+
+      - run: bun install --frozen-lockfile
+
+      # tsc before the export: `expo export` bundles happily through a type
+      # error, so without this a broken build ships as a working deploy.
+      - run: bun run --cwd packages/frontend typecheck
+
+      - run: bun run build:frontend
+        env:
+          EXPO_PUBLIC_API_URL: https://api.oxy.so
+          # Atlas's production Oxy client id. A repo VARIABLE, not a secret: the
+          # id travels inside the bundle, so it is public by construction, and
+          # hiding it would only cost the ability to check what production uses.
+          EXPO_PUBLIC_OXY_CLIENT_ID: ${{ vars.EXPO_PUBLIC_OXY_CLIENT_ID }}
+
+      - uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy packages/frontend/dist --project-name=atlas --branch=main
