@@ -14,11 +14,11 @@
     "postinstall": "bun run build:shared-types"
   },
   "overrides": {
-    "@oxyhq/core": "^20.0.0",
+    "@oxyhq/core": "^20.1.0",
     "@oxyhq/bloom": "^0.67.0"
   },
   "resolutions": {
-    "@oxyhq/core": "^20.0.0",
+    "@oxyhq/core": "^20.1.0",
     "@oxyhq/bloom": "^0.67.0"
   }
 }
