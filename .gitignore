@@ -1,9 +1,11 @@
 # Dependencies
 node_modules/
 
-# Build output
+# Build output. NOT a bare `lib/`: the frontend keeps its application code in
+# `packages/frontend/lib`, and ignoring that pattern globally silently drops
+# every module behind the `@/lib/*` alias — a commit that looks complete and a
+# build that cannot resolve its own imports. `shared-types` builds to `dist/`.
 dist/
-lib/
 web-build/
 
 # Expo
