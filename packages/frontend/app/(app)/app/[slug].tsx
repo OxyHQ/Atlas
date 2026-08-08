@@ -1,8 +1,10 @@
 import { useState } from 'react';
-import { ActivityIndicator, Linking, Pressable, ScrollView, Text, View } from 'react-native';
+import { ActivityIndicator, Linking, ScrollView, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { Avatar } from '@oxyhq/bloom/avatar';
+import { Button } from '@oxyhq/bloom/button';
+import { Card } from '@oxyhq/bloom/card';
 import { useAuth } from '@oxyhq/services';
 import { useTranslation } from '@/lib/i18n';
 import {
@@ -38,9 +40,9 @@ export default function AppPage() {
     return (
       <View className="flex-1 items-center justify-center gap-3 bg-background px-6">
         <Text className="text-base text-muted-foreground">{t('app.notFound')}</Text>
-        <Pressable onPress={() => router.replace('/')}>
-          <Text className="text-sm text-primary">{t('app.backToStore')}</Text>
-        </Pressable>
+        <Button variant="text" onPress={() => router.replace('/')}>
+          {t('app.backToStore')}
+        </Button>
       </View>
     );
   }
@@ -108,9 +110,9 @@ export default function AppPage() {
 function LinkRow({ label, url }: { label: string; url: string | null }) {
   if (!url) return null;
   return (
-    <Pressable onPress={() => Linking.openURL(url)} className="active:opacity-70">
-      <Text className="text-base text-primary">{label}</Text>
-    </Pressable>
+    <Button variant="link" onPress={() => Linking.openURL(url)}>
+      {label}
+    </Button>
   );
 }
 
@@ -131,49 +133,48 @@ function WriteReview({ slug }: { slug: string }) {
 
   if (!isAuthenticated) {
     return (
-      <Pressable
-        accessibilityRole="button"
-        // `signIn()` opens the SDK's in-app account dialog on web and native
-        // alike. Atlas never navigates to a login screen.
-        onPress={() => void signIn()}
-        className="items-center rounded-2xl bg-card px-5 py-4 active:opacity-80"
-      >
-        <Text className="text-base font-semibold text-foreground">{t('app.signInToReview')}</Text>
-      </Pressable>
+      // `signIn()` opens the SDK's in-app account dialog on web and native
+      // alike. Atlas never navigates to a login screen.
+      <Button variant="secondary" onPress={() => void signIn()}>
+        {t('app.signInToReview')}
+      </Button>
     );
   }
 
   return (
-    <View className="gap-3 rounded-2xl bg-card p-5">
-      <Text className="text-base font-semibold text-foreground">
-        {mine ? t('app.yourReview') : t('app.rateIt')}
-      </Text>
+    <Card variant="filled">
+      <View className="gap-3 p-5">
+        <Text className="text-base font-semibold text-foreground">
+          {mine ? t('app.yourReview') : t('app.rateIt')}
+        </Text>
 
-      <View className="flex-row gap-2">
-        {STARS.map((star) => (
-          <Pressable
-            key={star}
-            accessibilityRole="button"
-            accessibilityLabel={t('app.starLabel', { count: star })}
-            onPress={() => {
-              setRating(star);
-              write.mutate({ rating: star, body: mine?.body ?? null });
-            }}
-            disabled={write.isPending}
-          >
-            <Text className={star <= chosen ? 'text-2xl text-foreground' : 'text-2xl opacity-30'}>
-              ★
-            </Text>
-          </Pressable>
-        ))}
+        <View className="flex-row gap-1">
+          {STARS.map((star) => (
+            <Button
+              key={star}
+              variant="text"
+              size="small"
+              accessibilityLabel={t('app.starLabel', { count: star })}
+              disabled={write.isPending}
+              onPress={() => {
+                setRating(star);
+                write.mutate({ rating: star, body: mine?.body ?? null });
+              }}
+            >
+              <Text className={star <= chosen ? 'text-2xl text-foreground' : 'text-2xl opacity-30'}>
+                ★
+              </Text>
+            </Button>
+          ))}
+        </View>
+
+        {mine ? (
+          <Button variant="text" size="small" loading={remove.isPending} onPress={() => remove.mutate()}>
+            {t('app.withdrawReview')}
+          </Button>
+        ) : null}
       </View>
-
-      {mine ? (
-        <Pressable onPress={() => remove.mutate()} disabled={remove.isPending}>
-          <Text className="text-sm text-muted-foreground">{t('app.withdrawReview')}</Text>
-        </Pressable>
-      ) : null}
-    </View>
+    </Card>
   );
 }
 
@@ -181,32 +182,34 @@ function ReviewCard({ review }: { review: StoreReview }) {
   const { t } = useTranslation();
 
   return (
-    <View className="gap-2 rounded-2xl bg-card p-4">
-      <View className="flex-row items-center gap-2">
-        <Text className="text-base text-foreground">{'★'.repeat(review.rating)}</Text>
-        <Text className="text-sm text-muted-foreground">
-          {review.author.username ? `@${review.author.username}` : t('app.someone')}
-        </Text>
-        {/* Only ever shown when true. It is false for a first-party app nobody
-            consents to, so its absence must not read as a demotion. */}
-        {review.authorUsesApp ? (
-          <Text className="text-xs text-muted-foreground">· {t('app.usesThisApp')}</Text>
+    <Card variant="filled">
+      <View className="gap-2 p-4">
+        <View className="flex-row items-center gap-2">
+          <Text className="text-base text-foreground">{'★'.repeat(review.rating)}</Text>
+          <Text className="text-sm text-muted-foreground">
+            {review.author.username ? `@${review.author.username}` : t('app.someone')}
+          </Text>
+          {/* Only ever shown when true. It is false for a first-party app nobody
+              consents to, so its absence must not read as a demotion. */}
+          {review.authorUsesApp ? (
+            <Text className="text-xs text-muted-foreground">· {t('app.usesThisApp')}</Text>
+          ) : null}
+        </View>
+
+        {review.title ? (
+          <Text className="text-base font-semibold text-foreground">{review.title}</Text>
+        ) : null}
+        {review.body ? <Text className="text-base text-foreground">{review.body}</Text> : null}
+
+        {review.reply ? (
+          <View className="mt-1 gap-1 border-l-2 border-border pl-3">
+            <Text className="text-xs font-semibold text-muted-foreground">
+              {t('app.developerReply')}
+            </Text>
+            <Text className="text-sm text-foreground">{review.reply.body}</Text>
+          </View>
         ) : null}
       </View>
-
-      {review.title ? (
-        <Text className="text-base font-semibold text-foreground">{review.title}</Text>
-      ) : null}
-      {review.body ? <Text className="text-base text-foreground">{review.body}</Text> : null}
-
-      {review.reply ? (
-        <View className="mt-1 gap-1 border-l-2 border-border pl-3">
-          <Text className="text-xs font-semibold text-muted-foreground">
-            {t('app.developerReply')}
-          </Text>
-          <Text className="text-sm text-foreground">{review.reply.body}</Text>
-        </View>
-      ) : null}
-    </View>
+    </Card>
   );
 }

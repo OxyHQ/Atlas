@@ -1,8 +1,10 @@
 import { useState } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, Text, View } from 'react-native';
+import { ActivityIndicator, ScrollView, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Link } from 'expo-router';
+import { useRouter } from 'expo-router';
 import { Avatar } from '@oxyhq/bloom/avatar';
+import { Button } from '@oxyhq/bloom/button';
+import { Card } from '@oxyhq/bloom/card';
 import { useTranslation } from '@/lib/i18n';
 import { formatRating, useStoreApps, useStoreCategories, type StoreListingSummary } from '@/lib/store';
 
@@ -42,10 +44,12 @@ export default function StoreScreen() {
         {isLoading ? (
           <ActivityIndicator className="mt-12" />
         ) : isError ? (
-          <Pressable onPress={() => refetch()} className="mt-12 items-center">
+          <View className="mt-12 items-center gap-3">
             <Text className="text-base text-muted-foreground">{t('store.loadFailed')}</Text>
-            <Text className="mt-1 text-sm text-primary">{t('store.retry')}</Text>
-          </Pressable>
+            <Button variant="secondary" size="small" onPress={() => refetch()}>
+              {t('store.retry')}
+            </Button>
+          </View>
         ) : (page?.items.length ?? 0) === 0 ? (
           <Text className="mt-12 text-center text-base text-muted-foreground">
             {shelf ? t('store.emptyShelf') : t('store.emptyStore')}
@@ -89,33 +93,35 @@ function ShelfPicker({ categories, selected, onSelect, allLabel }: ShelfPickerPr
   );
 }
 
+/**
+ * A shelf filter.
+ *
+ * Bloom's `Badge` is a notification badge — a dot, a count, a placement — not a
+ * chip, so a small `Button` is the honest mapping: the selected shelf is the
+ * primary action and the rest are secondary.
+ */
 function Chip({ label, active, onPress }: { label: string; active: boolean; onPress: () => void }) {
   return (
-    <Pressable
-      accessibilityRole="button"
-      accessibilityState={{ selected: active }}
+    <Button
+      variant={active ? 'primary' : 'secondary'}
+      size="small"
       onPress={onPress}
-      className={
-        active
-          ? 'rounded-full bg-primary px-4 py-2'
-          : 'rounded-full bg-card px-4 py-2 active:opacity-70'
-      }
+      accessibilityLabel={label}
     >
-      <Text
-        className={active ? 'text-sm font-semibold text-primary-foreground' : 'text-sm text-foreground'}
-      >
-        {label}
-      </Text>
-    </Pressable>
+      {label}
+    </Button>
   );
 }
 
 function AppRow({ item }: { item: StoreListingSummary }) {
+  const router = useRouter();
   const rating = formatRating(item.rating);
 
   return (
-    <Link href={{ pathname: '/app/[slug]', params: { slug: item.slug } }} asChild>
-      <Pressable className="flex-row items-center gap-4 rounded-2xl bg-card p-4 active:opacity-80">
+    // `Card`'s own `onPress` rather than `<Link asChild>`: asChild needs its
+    // child to forward press props, and a Bloom component is not required to.
+    <Card variant="filled" onPress={() => router.push(`/app/${item.slug}`)} accessibilityLabel={item.name}>
+      <View className="flex-row items-center gap-4 p-4">
         {/* A bare file id plus a variant — the registered ImageResolver turns it
             into a URL. Never a hand-built one. */}
         <Avatar source={item.icon} variant="thumb" size={56} shape="squircle" name={item.name} />
@@ -142,7 +148,7 @@ function AppRow({ item }: { item: StoreListingSummary }) {
             ) : null}
           </View>
         </View>
-      </Pressable>
-    </Link>
+      </View>
+    </Card>
   );
 }
