@@ -18,6 +18,7 @@ import { formatRating, useStoreApps, useStoreCategories, type StoreListingSummar
 export default function StoreScreen() {
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
+  const router = useRouter();
   const [shelf, setShelf] = useState<string | undefined>(undefined);
 
   const { data: categories } = useStoreCategories();
@@ -25,9 +26,19 @@ export default function StoreScreen() {
 
   return (
     <View className="flex-1 bg-background" style={{ paddingTop: insets.top }}>
-      <View className="px-6 pt-4 pb-2">
-        <Text className="text-3xl font-bold text-foreground">{t('store.title')}</Text>
-        <Text className="mt-1 text-base text-muted-foreground">{t('store.subtitle')}</Text>
+      <View className="flex-row items-start justify-between gap-4 px-6 pt-4 pb-2">
+        <View className="min-w-0 flex-1">
+          <Text className="text-3xl font-bold text-foreground">{t('store.title')}</Text>
+          <Text className="mt-1 text-base text-muted-foreground">{t('store.subtitle')}</Text>
+        </View>
+        <Button
+          variant="text"
+          size="small"
+          accessibilityLabel={t('settings.title')}
+          onPress={() => router.push('/settings')}
+        >
+          {t('settings.title')}
+        </Button>
       </View>
 
       <ShelfPicker
