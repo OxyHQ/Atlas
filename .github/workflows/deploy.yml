@@ -99,3 +99,32 @@ jobs:
                      echo "::warning::Could not attach atlas.oxy.so — attach it in the Pages dashboard."
                      ;;
           esac
+
+          # Attaching the domain to the project does not create the DNS record,
+          # so without this the name attaches and still does not resolve — which
+          # is exactly what happened on the first run.
+          zone=$(curl -s -H "Authorization: Bearer $CF_API_TOKEN" \
+            "https://api.cloudflare.com/client/v4/zones?name=oxy.so" \
+            | python3 -c "import json,sys; r=json.load(sys.stdin).get('result') or []; print(r[0]['id'] if r else '')")
+          if [ -z "$zone" ]; then
+            echo "::warning::No Zone:Read on this token — add a proxied CNAME atlas → atlas.pages.dev by hand."
+            exit 0
+          fi
+          existing=$(curl -s -H "Authorization: Bearer $CF_API_TOKEN" \
+            "https://api.cloudflare.com/client/v4/zones/$zone/dns_records?name=atlas.oxy.so" \
+            | python3 -c "import json,sys; r=json.load(sys.stdin).get('result') or []; print(len(r))")
+          if [ "$existing" != "0" ]; then
+            echo "DNS record for atlas.oxy.so already exists."
+            exit 0
+          fi
+          created=$(curl -s -o /tmp/cf-dns.json -w '%{http_code}' -X POST \
+            -H "Authorization: Bearer $CF_API_TOKEN" \
+            -H "Content-Type: application/json" \
+            --data '{"type":"CNAME","name":"atlas","content":"atlas.pages.dev","proxied":true}' \
+            "https://api.cloudflare.com/client/v4/zones/$zone/dns_records")
+          if [ "$created" = "200" ]; then
+            echo "Created CNAME atlas → atlas.pages.dev (proxied)."
+          else
+            echo "Cloudflare answered $created:"; cat /tmp/cf-dns.json
+            echo "::warning::Could not create the DNS record — add a proxied CNAME atlas → atlas.pages.dev by hand."
+          fi
