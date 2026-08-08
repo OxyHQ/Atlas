@@ -33,6 +33,8 @@ const en: Messages = {
   'app.developerReply': 'From the developer',
   'app.usesThisApp': 'uses this app',
   'app.someone': 'Someone',
+  'nav.store': 'Store',
+  'nav.settings': 'Settings',
   'settings.title': 'Settings',
   'settings.signedOut': 'You are browsing signed out. Sign in to review an app.',
   'settings.signIn': 'Sign in',

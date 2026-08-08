@@ -10,6 +10,16 @@
    `bg-background` / `text-foreground` emit at build time. BloomThemeProvider
    writes the real var values to the document at runtime. */
 @theme {
+  /* Layout breakpoints, as CSS. The whole point is that the browser resolves
+     these — a JS `useWindowDimensions` read re-renders the tree on every resize
+     frame and feels sluggish, while a media query costs nothing.
+
+     `rail` is 500px because that is where Bloom's ContentPanel switches from
+     full-bleed to framed (`framedFrom={500}`), so the rail and the frame appear
+     on the same tick instead of one popping in before the other. */
+  --breakpoint-rail: 500px;
+  --breakpoint-wide: 990px;
+
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
