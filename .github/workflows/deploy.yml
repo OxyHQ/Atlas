@@ -81,50 +81,78 @@ jobs:
       # Attach atlas.oxy.so once. Cloudflare answers 409 when the domain is
       # already on the project, which is the steady state after the first run —
       # so that case is success, and anything else is reported.
+      # Make atlas.oxy.so reach this project: attach it to Pages AND point DNS
+      # at the project's own hostname. Attaching alone does not create a record,
+      # and a record aimed at the wrong host serves 403 rather than failing.
       - name: Ensure atlas.oxy.so points at this project
         env:
           CF_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CF_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: |
           set -uo pipefail
-          status=$(curl -s -o /tmp/cf-domain.json -w '%{http_code}' -X POST \
-            -H "Authorization: Bearer $CF_API_TOKEN" \
-            -H "Content-Type: application/json" \
-            --data '{"name":"atlas.oxy.so"}' \
-            "https://api.cloudflare.com/client/v4/accounts/$CF_ACCOUNT_ID/pages/projects/atlas/domains")
-          case "$status" in
-            200|201) echo "atlas.oxy.so attached." ;;
-            409)     echo "atlas.oxy.so was already attached." ;;
-            *)       echo "Cloudflare answered $status:"; cat /tmp/cf-domain.json
-                     echo "::warning::Could not attach atlas.oxy.so — attach it in the Pages dashboard."
-                     ;;
-          esac
+          api="https://api.cloudflare.com/client/v4"
+          auth="Authorization: Bearer $CF_API_TOKEN"
 
-          # Attaching the domain to the project does not create the DNS record,
-          # so without this the name attaches and still does not resolve — which
-          # is exactly what happened on the first run.
-          zone=$(curl -s -H "Authorization: Bearer $CF_API_TOKEN" \
-            "https://api.cloudflare.com/client/v4/zones?name=oxy.so" \
+          status=$(curl -s -o /tmp/cf-domain.json -w '%{http_code}' -X POST \
+            -H "$auth" -H "Content-Type: application/json" \
+            --data '{"name":"atlas.oxy.so"}' \
+            "$api/accounts/$CF_ACCOUNT_ID/pages/projects/atlas/domains")
+          # 8000018 is "you have already added this custom domain", and
+          # Cloudflare returns it as a 400 — not the 409 the API's shape
+          # suggests. Matching on the status alone cried wolf on every run
+          # after the first.
+          already=$(python3 -c "import json;print(any(e.get('code')==8000018 for e in (json.load(open('/tmp/cf-domain.json')).get('errors') or [])))" 2>/dev/null || echo False)
+          if [ "$status" = "200" ] || [ "$status" = "201" ]; then
+            echo "atlas.oxy.so attached."
+          elif [ "$already" = "True" ]; then
+            echo "atlas.oxy.so was already attached."
+          else
+            echo "Cloudflare answered $status:"; cat /tmp/cf-domain.json
+            echo "::warning::Could not attach atlas.oxy.so — attach it in the Pages dashboard."
+          fi
+
+          # The project's OWN pages.dev host. Pages appends a discriminator
+          # (`atlas-9ep`), so a CNAME to the bare `atlas.pages.dev` reaches
+          # nothing — which is exactly what served 403 on the first attempt.
+          curl -s -H "$auth" "$api/accounts/$CF_ACCOUNT_ID/pages/projects/atlas" > /tmp/cf-project.json
+          host=$(python3 -c "import json;print((json.load(open('/tmp/cf-project.json')).get('result') or {}).get('subdomain',''))")
+          if [ -z "$host" ]; then
+            echo "::warning::Could not read the project's pages.dev host; skipping DNS."
+            exit 0
+          fi
+          echo "project host: $host"
+
+          zone=$(curl -s -H "$auth" "$api/zones?name=oxy.so" \
             | python3 -c "import json,sys; r=json.load(sys.stdin).get('result') or []; print(r[0]['id'] if r else '')")
           if [ -z "$zone" ]; then
-            echo "::warning::No Zone:Read on this token — add a proxied CNAME atlas → atlas.pages.dev by hand."
+            echo "::warning::No Zone:Read on this token — point a proxied CNAME atlas at $host by hand."
             exit 0
           fi
-          existing=$(curl -s -H "Authorization: Bearer $CF_API_TOKEN" \
-            "https://api.cloudflare.com/client/v4/zones/$zone/dns_records?name=atlas.oxy.so" \
-            | python3 -c "import json,sys; r=json.load(sys.stdin).get('result') or []; print(len(r))")
-          if [ "$existing" != "0" ]; then
-            echo "DNS record for atlas.oxy.so already exists."
+
+          curl -s -H "$auth" "$api/zones/$zone/dns_records?name=atlas.oxy.so" > /tmp/cf-dns-list.json
+          record_id=$(python3 -c "import json;r=(json.load(open('/tmp/cf-dns-list.json')).get('result') or [{}])[0];print(r.get('id',''))")
+          record_host=$(python3 -c "import json;r=(json.load(open('/tmp/cf-dns-list.json')).get('result') or [{}])[0];print(r.get('content',''))")
+          body=$(python3 -c "import json,sys;print(json.dumps({'type':'CNAME','name':'atlas','content':sys.argv[1],'proxied':True}))" "$host")
+
+          if [ -n "$record_id" ] && [ "$record_host" = "$host" ]; then
+            echo "DNS already points at $host."
             exit 0
-          fi
-          created=$(curl -s -o /tmp/cf-dns.json -w '%{http_code}' -X POST \
-            -H "Authorization: Bearer $CF_API_TOKEN" \
-            -H "Content-Type: application/json" \
-            --data '{"type":"CNAME","name":"atlas","content":"atlas.pages.dev","proxied":true}' \
-            "https://api.cloudflare.com/client/v4/zones/$zone/dns_records")
-          if [ "$created" = "200" ]; then
-            echo "Created CNAME atlas → atlas.pages.dev (proxied)."
+          elif [ -n "$record_id" ]; then
+            # Repointed rather than left alone: a record aimed at the wrong host
+            # would serve 403 indefinitely and look like a Pages problem.
+            echo "DNS points at '$record_host'; repointing at $host."
+            code=$(curl -s -o /tmp/cf-dns.json -w '%{http_code}' -X PUT -H "$auth" \
+              -H "Content-Type: application/json" --data "$body" \
+              "$api/zones/$zone/dns_records/$record_id")
           else
-            echo "Cloudflare answered $created:"; cat /tmp/cf-dns.json
-            echo "::warning::Could not create the DNS record — add a proxied CNAME atlas → atlas.pages.dev by hand."
+            code=$(curl -s -o /tmp/cf-dns.json -w '%{http_code}' -X POST -H "$auth" \
+              -H "Content-Type: application/json" --data "$body" \
+              "$api/zones/$zone/dns_records")
+          fi
+
+          if [ "$code" = "200" ]; then
+            echo "CNAME atlas -> $host (proxied)."
+          else
+            echo "Cloudflare answered $code:"; cat /tmp/cf-dns.json
+            echo "::warning::Could not set DNS — point a proxied CNAME atlas at $host by hand."
           fi
