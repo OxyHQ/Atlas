@@ -77,3 +77,25 @@ jobs:
           # `--commit-dirty`: a CI workspace is dirty by construction after an
           # install and an export, and the warning is not about the deploy.
           command: pages deploy packages/frontend/dist --project-name=atlas --branch=main --commit-dirty=true
+
+      # Attach atlas.oxy.so once. Cloudflare answers 409 when the domain is
+      # already on the project, which is the steady state after the first run —
+      # so that case is success, and anything else is reported.
+      - name: Ensure atlas.oxy.so points at this project
+        env:
+          CF_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CF_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set -uo pipefail
+          status=$(curl -s -o /tmp/cf-domain.json -w '%{http_code}' -X POST \
+            -H "Authorization: Bearer $CF_API_TOKEN" \
+            -H "Content-Type: application/json" \
+            --data '{"name":"atlas.oxy.so"}' \
+            "https://api.cloudflare.com/client/v4/accounts/$CF_ACCOUNT_ID/pages/projects/atlas/domains")
+          case "$status" in
+            200|201) echo "atlas.oxy.so attached." ;;
+            409)     echo "atlas.oxy.so was already attached." ;;
+            *)       echo "Cloudflare answered $status:"; cat /tmp/cf-domain.json
+                     echo "::warning::Could not attach atlas.oxy.so — attach it in the Pages dashboard."
+                     ;;
+          esac
