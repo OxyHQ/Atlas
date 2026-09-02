@@ -1,5 +1,7 @@
 # Atlas — the Oxy App Store
 
+> Universal standards live in `~/AGENTS.md`, Oxy-wide gotchas in `~/Oxy/AGENTS.md`. Documentation belongs in `docs/`, history in git, status in issues. This file holds only RULES, commands and pointers. **Budget: under 8 KB.**
+
 Expo / React Native frontend for the Oxy app store, at **atlas.oxy.so**. Generated
 with `create-oxy-app --no-backend`.
 
