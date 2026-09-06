@@ -15,10 +15,10 @@
   },
   "overrides": {
     "@oxyhq/core": "^21.0.0",
-    "@oxyhq/bloom": "^1.8.0"
+    "@oxyhq/bloom": "^1.14.0"
   },
   "resolutions": {
     "@oxyhq/core": "^21.0.0",
-    "@oxyhq/bloom": "^1.8.0"
+    "@oxyhq/bloom": "^1.14.0"
   }
 }
