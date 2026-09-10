@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { Image, Linking, Pressable, ScrollView, Text, View } from 'react-native';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
-import { Avatar } from '@oxyhq/bloom/avatar';
-import { Button } from '@oxyhq/bloom/button';
-import { useAuth, useOxy } from '@oxyhq/services';
+import { Avatar } from '@oxy.so/bloom/avatar';
+import { Button } from '@oxy.so/bloom/button';
+import { useAuth, useOxy } from '@oxy.so/services';
 import { useTranslation } from '@/lib/i18n';
 import {
   formatRating,

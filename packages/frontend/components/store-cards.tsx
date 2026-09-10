@@ -1,7 +1,7 @@
 import { Pressable, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Avatar } from '@oxyhq/bloom/avatar';
-import { Button } from '@oxyhq/bloom/button';
+import { Avatar } from '@oxy.so/bloom/avatar';
+import { Button } from '@oxy.so/bloom/button';
 import { useTranslation } from '@/lib/i18n';
 import { formatRating, type StoreListingSummary } from '@/lib/store';
 

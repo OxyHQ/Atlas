@@ -1,7 +1,7 @@
 import { Platform, View } from 'react-native';
 import { Slot, Stack } from 'expo-router';
-import { ContentPanel } from '@oxyhq/bloom/content-panel';
-import { useTheme } from '@oxyhq/bloom/theme';
+import { ContentPanel } from '@oxy.so/bloom/content-panel';
+import { useTheme } from '@oxy.so/bloom/theme';
 import { BottomBar, SideRail } from '@/components/app-shell';
 
 const IS_WEB = Platform.OS === 'web';

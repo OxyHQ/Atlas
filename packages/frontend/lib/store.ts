@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useOxy } from '@oxyhq/services';
+import { useOxy } from '@oxy.so/services';
 import type {
   StoreCategory,
   StoreListingDetail,
@@ -7,10 +7,10 @@ import type {
   StoreOwnReview,
   StoreReview,
   WriteStoreReviewInput,
-} from '@oxyhq/core';
+} from '@oxy.so/core';
 
 /**
- * Atlas reads the store through `@oxyhq/core`'s store mixin, never a hand-rolled
+ * Atlas reads the store through `@oxy.so/core`'s store mixin, never a hand-rolled
  * request. The API has two response envelopes and the publisher's routes have a
  * third; the mixin is the one place that knows which is which, and reaching past
  * it is how a client ends up reporting a total of zero on every page.

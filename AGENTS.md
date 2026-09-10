@@ -9,7 +9,7 @@ with `create-oxy-app --no-backend`.
 
 The store lives in **oxy-api** (`OxyHQServices/packages/api`): `app_listings`,
 `app_reviews`, `app_categories`, and the routes over them. Atlas reads it through
-`@oxyhq/core`'s store mixin and writes reviews the same way. There is no server
+`@oxy.so/core`'s store mixin and writes reviews the same way. There is no server
 here to deploy, no database, and no second copy of any store rule.
 
 Where each surface lives:
@@ -17,7 +17,7 @@ Where each surface lives:
 | | |
 |--|--|
 | The catalogue, reviews, moderation | oxy-api (`/store`, `/applications/:appId/listing`) |
-| The client for all of it | `@oxyhq/core` — `OxyServices.store.ts` |
+| The client for all of it | `@oxy.so/core` — `OxyServices.store.ts` |
 | A publisher editing their page | Oxy Console → Apps → Store |
 | The storefront people browse | **here** |
 | oxy.so's own apps page | the website, which is a different product reading the same API |
@@ -55,7 +55,7 @@ Always use **bun** (never npm/yarn). After changing any `package.json`, run `bun
 
 ```
 packages/
-  frontend/       @atlas/frontend       Expo Router · NativeWind · Bloom · @oxyhq/services
+  frontend/       @atlas/frontend       Expo Router · NativeWind · Bloom · @oxy.so/services
   shared-types/   @atlas/shared-types   Shared TypeScript types (CJS)
 ```
 
@@ -69,7 +69,7 @@ bun run build:frontend      # expo export --platform web
 
 ## Oxy SDK conventions (do not deviate)
 
-- **One provider:** `OxyProvider` from `@oxyhq/services` (web + native) with the registered `clientId` (`EXPO_PUBLIC_OXY_CLIENT_ID`). Interactive sign-in is the in-app `OxyAccountDialog` — never redirect to an IdP.
-- **Config:** all Expo config comes from `@oxyhq/app-preset` — the app plugin (`['@oxyhq/app-preset', {}]`), `createOxyMetroConfig`, the shared Babel/ESLint configs, `base.css`, and the tsconfig bases. Do not copy-paste that config back into the app; update the preset instead.
+- **One provider:** `OxyProvider` from `@oxy.so/services` (web + native) with the registered `clientId` (`EXPO_PUBLIC_OXY_CLIENT_ID`). Interactive sign-in is the in-app `OxyAccountDialog` — never redirect to an IdP.
+- **Config:** all Expo config comes from `@oxy.so/app-preset` — the app plugin (`['@oxy.so/app-preset', {}]`), `createOxyMetroConfig`, the shared Babel/ESLint configs, `base.css`, and the tsconfig bases. Do not copy-paste that config back into the app; update the preset instead.
 - **Theming:** NativeWind className-based only, via `BloomThemeProvider`. Never hardcode brand colors.
 - **Session gating:** gate private API calls on `useAuth().canUsePrivateApi`. Atlas has no `(auth)` group — see above — so there is no group swap to be the authority for.

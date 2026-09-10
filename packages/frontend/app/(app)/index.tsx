@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { ScrollView, Text, View } from 'react-native';
-import { Button } from '@oxyhq/bloom/button';
+import { Button } from '@oxy.so/bloom/button';
 import { AppListRow, HeroCard, ShelfTile, ShelfTileSkeleton } from '@/components/store-cards';
 import { useTranslation } from '@/lib/i18n';
 import { useStoreApps, useStoreCategories, type StoreListingSummary } from '@/lib/store';
