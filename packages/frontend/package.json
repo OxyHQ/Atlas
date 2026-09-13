@@ -8,10 +8,11 @@
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
-    "export:web": "expo export --platform web",
+    "export:web": "expo export --platform web && bun run build:edge",
     "prebuild": "expo prebuild",
     "lint": "expo lint",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "build:edge": "bun build worker/index.js --target=browser --format=esm --outfile=dist/_worker.js"
   },
   "dependencies": {
     "@atlas/shared-types": "workspace:*",
@@ -53,7 +54,8 @@
     "react-native-svg": "15.15.5",
     "react-native-web": "~0.21.0",
     "react-native-worklets": "0.10.0",
-    "tailwindcss": "4.3.2"
+    "tailwindcss": "4.3.2",
+    "@oxy.so/telemetry": "1.1.0"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "4.3.2",

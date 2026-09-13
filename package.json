@@ -11,7 +11,8 @@
     "build:shared-types": "bun run --cwd packages/shared-types build",
     "build:frontend": "bun run --cwd packages/frontend export:web",
     "lint": "bun run --cwd packages/frontend lint",
-    "postinstall": "bun run build:shared-types"
+    "postinstall": "bun run build:shared-types",
+    "test:edge": "bun test scripts/edge-activity.test.ts"
   },
   "overrides": {
     "@oxy.so/core": "1.1.0",
