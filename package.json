@@ -14,11 +14,13 @@
     "postinstall": "bun run build:shared-types"
   },
   "overrides": {
-    "@oxy.so/core": "^1.0.0",
-    "@oxy.so/bloom": "^1.0.0"
+    "@oxy.so/core": "1.1.0",
+    "@oxy.so/bloom": "^1.0.0",
+    "@oxy.so/telemetry": "1.1.0"
   },
   "resolutions": {
-    "@oxy.so/core": "^1.0.0",
-    "@oxy.so/bloom": "^1.0.0"
+    "@oxy.so/core": "1.1.0",
+    "@oxy.so/bloom": "^1.0.0",
+    "@oxy.so/telemetry": "1.1.0"
   }
 }
