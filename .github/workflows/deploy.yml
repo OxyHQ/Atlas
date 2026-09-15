@@ -70,13 +70,20 @@ jobs:
             exit 1
           fi
 
-      - uses: cloudflare/wrangler-action@v3
-        with:
-          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          # `--commit-dirty`: a CI workspace is dirty by construction after an
-          # install and an export, and the warning is not about the deploy.
-          command: pages deploy packages/frontend/dist --project-name=atlas --branch=main --commit-dirty=true
+      # `bunx wrangler@4`, NOT `cloudflare/wrangler-action` (forbidden
+      # fleet-wide). The action installs its own wrangler mid-deploy
+      # (`bun i wrangler@3.90.0`), which intermittently dies with
+      # `Fail extracting tarball for "wrangler"` and publishes nothing. Pinned
+      # to a major so a new one cannot change the deploy path with no diff.
+      # wrangler reads its credentials from `env:`.
+      #
+      # `--commit-dirty`: a CI workspace is dirty by construction after an
+      # install and an export, and the warning is not about the deploy.
+      - name: Deploy to Cloudflare Pages
+        run: bunx wrangler@4 pages deploy packages/frontend/dist --project-name=atlas --branch=main --commit-dirty=true
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
 
       # Attach atlas.oxy.so once. Cloudflare answers 409 when the domain is
       # already on the project, which is the steady state after the first run —
