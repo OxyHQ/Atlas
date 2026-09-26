@@ -166,7 +166,7 @@ function Screenshots({ app }: { app: { screenshots: { id: string; fileId: string
       {app.screenshots.map((shot) => (
         <View key={shot.id} className="gap-1.5">
           <Image
-            source={{ uri: oxyServices.getFileDownloadUrl(shot.fileId, 'full') }}
+            source={{ uri: oxyServices.assets.publicUrl(shot.fileId, 'full') }}
             accessibilityLabel={shot.caption ?? undefined}
             resizeMode="cover"
             className="h-[420px] w-[236px] rounded-2xl bg-card"

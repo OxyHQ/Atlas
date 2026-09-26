@@ -9,7 +9,7 @@ with `create-oxy-app --no-backend`.
 
 The store lives in **oxy-api** (`OxyHQServices/packages/api`): `app_listings`,
 `app_reviews`, `app_categories`, and the routes over them. Atlas reads it through
-`@oxy.so/core`'s store mixin and writes reviews the same way. There is no server
+`@oxy.so/core`'s `oxy.store` namespace and writes reviews the same way. There is no server
 here to deploy, no database, and no second copy of any store rule.
 
 Where each surface lives:
@@ -17,12 +17,12 @@ Where each surface lives:
 | | |
 |--|--|
 | The catalogue, reviews, moderation | oxy-api (`/store`, `/applications/:appId/listing`) |
-| The client for all of it | `@oxy.so/core` — `OxyServices.store.ts` |
+| The client for all of it | `@oxy.so/core` — `oxy.store` (`src/api/store.ts`) |
 | A publisher editing their page | Oxy Console → Apps → Store |
 | The storefront people browse | **here** |
 | oxy.so's own apps page | the website, which is a different product reading the same API |
 
-Add a store capability in oxy-api and the mixin, never here.
+Add a store capability in oxy-api and the `oxy.store` namespace, never here.
 
 ## The store is public
 
