@@ -43,7 +43,7 @@ export function useStoreCategories() {
 
   return useQuery({
     queryKey: queryKeys.categories,
-    queryFn: () => oxyServices.listStoreCategories(),
+    queryFn: () => oxyServices.store.categories(),
     // Not gated on a session: the shelves are public and the storefront should
     // not wait for cold boot to draw them.
     enabled: isAuthResolved !== undefined,
@@ -57,7 +57,7 @@ export function useStoreApps(category?: string) {
 
   return useQuery({
     queryKey: queryKeys.apps(category),
-    queryFn: () => oxyServices.listStoreApps({ category, limit: 48 }),
+    queryFn: () => oxyServices.store.apps({ category, limit: 48 }),
     staleTime: 1000 * 60 * 2,
   });
 }
@@ -68,7 +68,7 @@ export function useStoreApp(slug: string) {
 
   return useQuery({
     queryKey: queryKeys.app(slug),
-    queryFn: () => oxyServices.getStoreApp(slug),
+    queryFn: () => oxyServices.store.app(slug),
     enabled: !!slug,
     staleTime: 1000 * 60 * 2,
   });
@@ -80,7 +80,7 @@ export function useStoreReviews(slug: string, sort: 'recent' | 'rating' = 'recen
 
   return useQuery({
     queryKey: queryKeys.reviews(slug, sort),
-    queryFn: () => oxyServices.listStoreReviews(slug, { sort, limit: 20 }),
+    queryFn: () => oxyServices.store.reviews.list(slug, { sort, limit: 20 }),
     enabled: !!slug,
     staleTime: 1000 * 60,
   });
@@ -92,7 +92,7 @@ export function useMyStoreReview(slug: string) {
 
   return useQuery({
     queryKey: queryKeys.ownReview(slug),
-    queryFn: () => oxyServices.getMyStoreReview(slug),
+    queryFn: () => oxyServices.store.reviews.mine(slug),
     enabled: !!slug && isAuthenticated,
     staleTime: 1000 * 30,
   });
@@ -110,7 +110,7 @@ export function useWriteStoreReview(slug: string) {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (input: WriteStoreReviewInput) => oxyServices.writeStoreReview(slug, input),
+    mutationFn: (input: WriteStoreReviewInput) => oxyServices.store.reviews.write(slug, input),
     onSuccess: (review) => {
       queryClient.setQueryData(queryKeys.ownReview(slug), review);
       queryClient.invalidateQueries({ queryKey: ['store', 'reviews', slug] });
@@ -125,7 +125,7 @@ export function useDeleteMyStoreReview(slug: string) {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: () => oxyServices.deleteMyStoreReview(slug),
+    mutationFn: () => oxyServices.store.reviews.deleteMine(slug),
     onSuccess: () => {
       queryClient.setQueryData(queryKeys.ownReview(slug), null);
       queryClient.invalidateQueries({ queryKey: ['store', 'reviews', slug] });
