@@ -67,7 +67,7 @@ export default function StoreScreen() {
       ) : isError ? (
         <View className="items-center gap-3 px-5 py-20">
           <Text className="text-base text-muted-foreground">{t('store.loadFailed')}</Text>
-          <Button variant="secondary" size="small" onPress={() => refetch()}>
+          <Button appearance="outline" tone="neutral" size="sm" onPress={() => refetch()}>
             {t('store.retry')}
           </Button>
         </View>

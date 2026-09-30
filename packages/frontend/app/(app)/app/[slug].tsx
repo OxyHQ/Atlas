@@ -38,7 +38,7 @@ export default function AppPage() {
     return (
       <View className="flex-1 items-center justify-center gap-3 px-6">
         <Text className="text-base text-muted-foreground">{t('app.notFound')}</Text>
-        <Button variant="text" onPress={() => router.replace('/')}>
+        <Button appearance="plain" tone="accent" onPress={() => router.replace('/')}>
           {t('app.backToStore')}
         </Button>
       </View>
@@ -68,7 +68,7 @@ export default function AppPage() {
             </View>
             {primaryUrl ? (
               <View className="flex-row">
-                <Button variant="primary" size="small" onPress={() => Linking.openURL(primaryUrl)}>
+                <Button appearance="solid" tone="accent" size="sm" onPress={() => Linking.openURL(primaryUrl)}>
                   {t('app.open')}
                 </Button>
               </View>
@@ -269,7 +269,7 @@ function WriteReview({ slug }: { slug: string }) {
 
   if (!isAuthenticated) {
     return (
-      <Button variant="secondary" onPress={() => void signIn()}>
+      <Button appearance="outline" tone="neutral" onPress={() => void signIn()}>
         {t('app.signInToReview')}
       </Button>
     );
@@ -303,7 +303,7 @@ function WriteReview({ slug }: { slug: string }) {
 
       {mine ? (
         <View className="flex-row">
-          <Button variant="text" size="small" loading={remove.isPending} onPress={() => remove.mutate()}>
+          <Button appearance="plain" tone="accent" size="sm" loading={remove.isPending} onPress={() => remove.mutate()}>
             {t('app.withdrawReview')}
           </Button>
         </View>

@@ -32,7 +32,7 @@ function OpenButton({ slug }: { slug: string }) {
   const { t } = useTranslation();
   const open = useOpenApp(slug);
   return (
-    <Button variant="secondary" size="small" onPress={open}>
+    <Button appearance="outline" tone="neutral" size="sm" onPress={open}>
       {t('store.view')}
     </Button>
   );
@@ -83,7 +83,7 @@ export function HeroCard({ item }: { item: StoreListingSummary }) {
           ) : (
             <Text className="text-[13px] text-muted-foreground">{t('app.noReviewsYet')}</Text>
           )}
-          <Button variant="primary" size="small" onPress={open}>
+          <Button appearance="solid" tone="accent" size="sm" onPress={open}>
             {t('store.view')}
           </Button>
         </View>

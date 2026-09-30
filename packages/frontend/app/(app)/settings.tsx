@@ -54,7 +54,7 @@ export default function SettingsScreen() {
         ) : (
           <View className="gap-3 px-6 py-4">
             <Text className="text-base text-muted-foreground">{t('settings.signedOut')}</Text>
-            <Button variant="secondary" onPress={() => void signIn()}>
+            <Button appearance="outline" tone="neutral" onPress={() => void signIn()}>
               {t('settings.signIn')}
             </Button>
           </View>

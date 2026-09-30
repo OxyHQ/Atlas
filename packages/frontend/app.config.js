@@ -38,8 +38,9 @@ module.exports = {
           dark: { backgroundColor: '#000000' },
         },
       ],
-      // Shared Oxy native config: android:sharedUserId, iOS keychain group,
-      // expo-build-properties defaults, and the shared-identity reader.
+      // Shared Oxy native config: the iOS keychain group, expo-build-properties
+      // defaults, and withOxySharedPermissions (Atlas runs on its own Android
+      // UID and reaches the Commons/Accounts providers over signature IPC).
       ['@oxy.so/app-preset', {}],
     ],
     extra: {
