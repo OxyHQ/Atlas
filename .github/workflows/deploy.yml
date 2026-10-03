@@ -28,7 +28,7 @@ jobs:
         with:
           bun-version: 1.3.14
 
-      - run: bun install --frozen-lockfile
+      - run: bun install --frozen-lockfile --minimum-release-age=0
 
       # tsc before the export: `expo export` bundles happily through a type
       # error, so without this a broken build ships as a working deploy.

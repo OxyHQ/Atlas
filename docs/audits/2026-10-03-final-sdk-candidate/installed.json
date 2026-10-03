@@ -1,0 +1,52 @@
+[
+  {
+    "name": "@oxy.so/contracts",
+    "installedRoot": "/home/nate/Oxy/Atlas/.worktrees/1519-final-sdk-adoption-20261003/node_modules/@oxy.so/contracts",
+    "archive": "/home/nate/Oxy/.agent-evidence/i04-consumer-final-200134-packs/oxy.so-contracts-4.9.0.tgz",
+    "archiveSha256": "6b1e6a8da92341871d2832834ad063df1a1e84a46dc367786599fdd26be6e635",
+    "files": 198,
+    "membersSha256": "5f45514a3499840978870fa3f6144c4c03ad20cd81dd71ab8a09f618d5af28a0",
+    "allMembersByteEqual": true,
+    "published": false
+  },
+  {
+    "name": "@oxy.so/core",
+    "installedRoot": "/home/nate/Oxy/Atlas/.worktrees/1519-final-sdk-adoption-20261003/node_modules/@oxy.so/core",
+    "archive": "/home/nate/Oxy/.agent-evidence/i04-consumer-final-200134-packs/oxy.so-core-4.2.0.tgz",
+    "archiveSha256": "fa7e67d71f55cc7503af08e4de720ea0b7a7db2d429d80fe04a79d3060c9aaff",
+    "files": 581,
+    "membersSha256": "c0791a8edb51deab40c11a5e35723efc3d6fe5c6f3d2801f6f747664abe4bb7b",
+    "allMembersByteEqual": true,
+    "published": false
+  },
+  {
+    "name": "@oxy.so/services",
+    "installedRoot": "/home/nate/Oxy/Atlas/.worktrees/1519-final-sdk-adoption-20261003/node_modules/@oxy.so/services",
+    "archive": "/home/nate/Oxy/.agent-evidence/i04-consumer-final-200134-packs/oxy.so-services-11.1.0.tgz",
+    "archiveSha256": "b8d232cb04d934ac38c8be303dbbcf9819d444bec8458628c8478cbbf2155c9c",
+    "files": 2418,
+    "membersSha256": "7ffcdcfc880dd3be1abd87a075310978475b16056599388423febf1d9671b97b",
+    "allMembersByteEqual": true,
+    "published": false
+  },
+  {
+    "name": "@oxy.so/protocol",
+    "installedRoot": "/home/nate/Oxy/Atlas/.worktrees/1519-final-sdk-adoption-20261003/node_modules/@oxy.so/protocol",
+    "archive": "/home/nate/Oxy/.agent-evidence/i04-consumer-final-200134-packs/oxy.so-protocol-1.2.2.tgz",
+    "archiveSha256": "325b20125f1cf5159c36ca7a75f32c83a4560cf41c55526828b1718595acc843",
+    "files": 145,
+    "membersSha256": "6d19c0f03db48de92b746a87fc6ae056c1f409a6d3f83da14ecc5c323e04d4d4",
+    "allMembersByteEqual": true,
+    "published": false
+  },
+  {
+    "name": "@oxy.so/bloom",
+    "installedRoot": "/home/nate/Oxy/Atlas/.worktrees/1519-final-sdk-adoption-20261003/node_modules/@oxy.so/bloom",
+    "archive": "/home/nate/Oxy/.agent-evidence/root-1519-20261003/bloom712-publication/oxy-so-bloom-7.1.2.tgz",
+    "archiveSha256": "9e7796b206cded1acc8edf640591fa80f6f0b99f73d557c262ab55103a2a4df9",
+    "files": 21941,
+    "membersSha256": "bf88e890a914712c2daedc26d054b30a26d843266101ad6e262d6e648de85d89",
+    "allMembersByteEqual": true,
+    "published": true
+  }
+]
