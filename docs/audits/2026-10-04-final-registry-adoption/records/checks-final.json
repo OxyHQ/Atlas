@@ -1,0 +1,35 @@
+{
+  "worktree": "/home/nate/Oxy/Atlas/.worktrees/1519-final-sdk-adoption-20261003",
+  "output": "/home/nate/Oxy/.agent-evidence/i04-consumer-final-prs/registry-Atlas-20261004",
+  "receipt": "local-final-checks.json",
+  "jobs": [
+    {
+      "name": "edge",
+      "argv": [
+        "bun",
+        "run",
+        "test:edge"
+      ]
+    },
+    {
+      "name": "frontend-export",
+      "argv": [
+        "env",
+        "EXPO_PUBLIC_OXY_CLIENT_ID=oxy_dk_b1440fd0ad132ffe6279f47d1d769bed92e6cfeb7dc4a7e1",
+        "EXPO_NO_DOTENV=1",
+        "bun",
+        "run",
+        "build:frontend"
+      ]
+    },
+    {
+      "name": "frontend-types",
+      "cwd": "packages/frontend",
+      "argv": [
+        "bun",
+        "run",
+        "typecheck"
+      ]
+    }
+  ]
+}

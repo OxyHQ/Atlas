@@ -1,0 +1,38 @@
+[
+  {
+    "name": "edge",
+    "cwd": ".",
+    "argv": [
+      "bun",
+      "run",
+      "test:edge"
+    ],
+    "exitCode": 0,
+    "seconds": 0.064
+  },
+  {
+    "name": "frontend-export",
+    "cwd": ".",
+    "argv": [
+      "env",
+      "EXPO_PUBLIC_OXY_CLIENT_ID=oxy_dk_b1440fd0ad132ffe6279f47d1d769bed92e6cfeb7dc4a7e1",
+      "EXPO_NO_DOTENV=1",
+      "bun",
+      "run",
+      "build:frontend"
+    ],
+    "exitCode": 0,
+    "seconds": 12.553
+  },
+  {
+    "name": "frontend-types",
+    "cwd": "packages/frontend",
+    "argv": [
+      "bun",
+      "run",
+      "typecheck"
+    ],
+    "exitCode": 0,
+    "seconds": 1.417
+  }
+]
