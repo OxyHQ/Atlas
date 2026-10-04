@@ -1,0 +1,115 @@
+{
+  "source": "a0a7a70f7ccd1406f2442d42954c5b498d438abb",
+  "sources": [
+    {
+      "path": "bun.lock",
+      "sha256": "bec4589a89dd672798a5cf8cfca2123a6242c0c51a094f44521c7bff0beb189c"
+    },
+    {
+      "path": "package.json",
+      "sha256": "0d9f6216db39eb15aa4036572e2392af2a39667e2b1a323dbb8854b044c029f2"
+    },
+    {
+      "path": "packages/frontend/package.json",
+      "sha256": "ac90309679d777ab9209f53596d330a6479dddcb615c9e96eb2d2531a8a13f25"
+    }
+  ],
+  "records": [
+    {
+      "path": "docs/audits/2026-10-04-final-registry-adoption/records/Atlas-frozen.log",
+      "sha256": "40a559e4fd74541ee06e0ff5a3061d25cf47373b713c8321e64b7aa04a81cea4",
+      "bytes": 195
+    },
+    {
+      "path": "docs/audits/2026-10-04-final-registry-adoption/records/Atlas-installed.json",
+      "sha256": "c2d2caee0b1ee1232565f7d8f9e71eed1578f7e9d31f70f989e8e9dc27135d57",
+      "bytes": 1269
+    },
+    {
+      "path": "docs/audits/2026-10-04-final-registry-adoption/records/Atlas-resolve.log",
+      "sha256": "005bfa83ce0710e304a7c7611c078342d0b7a7fa260b90eadec08d4f9542a2e1",
+      "bytes": 272
+    },
+    {
+      "path": "docs/audits/2026-10-04-final-registry-adoption/records/bloom-final-importers.json",
+      "sha256": "3bf1a2c26cf27be28514b4833e8519eae83e5b9d10965bca64fc2864af85f62f",
+      "bytes": 593
+    },
+    {
+      "path": "docs/audits/2026-10-04-final-registry-adoption/records/checks-final.json",
+      "sha256": "008313b38eb9a0eeb6ce7a68ce2dc689ed5e3342dba135a621036d1f3a8f31fc",
+      "bytes": 757
+    },
+    {
+      "path": "docs/audits/2026-10-04-final-registry-adoption/records/contracts-registry.json",
+      "sha256": "fb1ded2797bdbd0ca31460f3cba087f078a86dc201365c923da9fcc23b07ed7b",
+      "bytes": 380
+    },
+    {
+      "path": "docs/audits/2026-10-04-final-registry-adoption/records/core-registry.json",
+      "sha256": "99b7f8a1cc87cf46ff54b3113a1911a938f39b4f086537e0a4138ee38dd035b7",
+      "bytes": 375
+    },
+    {
+      "path": "docs/audits/2026-10-04-final-registry-adoption/records/edge.log",
+      "sha256": "144e16ee05d6b51b989dd32639b1bef8bbee09fb1d354b8b47c67017a1b65d74",
+      "bytes": 418
+    },
+    {
+      "path": "docs/audits/2026-10-04-final-registry-adoption/records/frontend-export.log",
+      "sha256": "4cc94e32cd199065e249219a99e4c0450e5f17f1dadef07f68daeb99a6ca7101",
+      "bytes": 9099
+    },
+    {
+      "path": "docs/audits/2026-10-04-final-registry-adoption/records/frontend-types.log",
+      "sha256": "8366207267355d3e3d5bf3bf6e8c94c5f93f6078c34f08973fa2b38cdda6cc92",
+      "bytes": 15
+    },
+    {
+      "path": "docs/audits/2026-10-04-final-registry-adoption/records/intent.json",
+      "sha256": "b9a83c5a2d5c6fc720d89820a4f42f3e600159134b3bdfff78d32b326bc0bbcf",
+      "bytes": 149
+    },
+    {
+      "path": "docs/audits/2026-10-04-final-registry-adoption/records/local-final-checks.json",
+      "sha256": "5877e190410ca90d84e4039e4c30eb29ee7198bddb8ebc7b8dacb9eb0c7ca539",
+      "bytes": 626
+    },
+    {
+      "path": "docs/audits/2026-10-04-final-registry-adoption/records/mcp-registry.json",
+      "sha256": "cc279f4f5b1ca68041f6f0d3583e4d9dc218bd7c0b77846207aa3b981086d7ac",
+      "bytes": 373
+    },
+    {
+      "path": "docs/audits/2026-10-04-final-registry-adoption/records/preflight.json",
+      "sha256": "449e12d0f0f555389c85bf2c44d744ce0dba106e764812a4e38439f6c15542c0",
+      "bytes": 250
+    },
+    {
+      "path": "docs/audits/2026-10-04-final-registry-adoption/records/protocol-registry.json",
+      "sha256": "cc0b427dca92d55ea5e1debe7e76580618a26f997b2c888b8484537b64b70bbd",
+      "bytes": 379
+    },
+    {
+      "path": "docs/audits/2026-10-04-final-registry-adoption/records/registry.json",
+      "sha256": "a39da224fafeec388f0ac27e08ea13cf666427a0177b67f7b077c65cadb59df0",
+      "bytes": 415373
+    },
+    {
+      "path": "docs/audits/2026-10-04-final-registry-adoption/records/services-registry.json",
+      "sha256": "444599f0eb56d104d64c288ed3a6544163e54430c0f275c2feec219d5f624611",
+      "bytes": 381
+    }
+  ],
+  "validation": {
+    "edgePassed": 2,
+    "sdkImporterMembers": 2999,
+    "bloomImporterMembers": 43882,
+    "frontendTypesExport": "passed"
+  },
+  "limits": [
+    "Published registry archives and all installed SDK importer members were compared byte for byte. Stale same-version candidate materializations were retained and repaired with a frozen install; their setup failures remain in the records.",
+    "Local web export proves compilation, not browser/native acceptance or deployed public-client configuration. Required PR/main CI and root image/promotion remain separate.",
+    "No production database, provider writes, grants, credentials or auth fixtures were changed. Atlas is frontend-only. Export used the existing independently verified public client ID."
+  ]
+}

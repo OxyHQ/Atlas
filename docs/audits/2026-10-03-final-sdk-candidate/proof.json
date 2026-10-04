@@ -1,0 +1,162 @@
+{
+  "schemaVersion": 1,
+  "base": "530f6fea31fb6ba089026855646c4be9a73d91ac",
+  "sdkCandidate": "20013421a4cc07545a7685931db68f4ee55f1773",
+  "sources": [
+    {
+      "path": ".github/workflows/deploy.yml",
+      "sha256": "d66cfdb810693e0ed3b55a30b7d73ec498ec529a022b4d8ca74128f3e98628ee"
+    },
+    {
+      "path": "packages/frontend/app/_layout.tsx",
+      "sha256": "95c57858898e8dc06ec3d7671de0d48dccda1a440e52784b57c5c3050cb5a024"
+    },
+    {
+      "path": "packages/frontend/lib/config.ts",
+      "sha256": "182ff9b6357fce4368f66a9cfc3d096c5eeb6f6d49eee45edd601dfd23f71341"
+    },
+    {
+      "path": "packages/frontend/app.config.js",
+      "sha256": "baacf819e68a60b731b2a1514cf792670808466f7f3802bbb7f805f77affb4f1"
+    },
+    {
+      "path": "packages/frontend/app/(app)/_layout.tsx",
+      "sha256": "871731b2980ad555b62476614233078eb32a951ba2e47dc465dbf6eba95daecc"
+    },
+    {
+      "path": "packages/frontend/app/(app)/app/[slug].tsx",
+      "sha256": "c6193da12ea0510779f1633d5eba72f61ef54ad4e854ca5f6b0b1044f6f572cf"
+    },
+    {
+      "path": "packages/frontend/app/(app)/index.tsx",
+      "sha256": "6f70c73deb615d2e509e0f4a78f5796279b475c8e724d5c5ba9de4956481f6cf"
+    },
+    {
+      "path": "packages/frontend/app/(app)/settings.tsx",
+      "sha256": "db7e500788f7477c4ddfe7d51b0980e3db03adaf674f41a15fa7f734e185957e"
+    },
+    {
+      "path": "packages/frontend/babel.config.js",
+      "sha256": "5434a1b646152596d1762088fdf63f4c6d7a5561eba42c81cdf27284e890b51e"
+    },
+    {
+      "path": "packages/frontend/components/app-shell.tsx",
+      "sha256": "8fd606d92027393aee3c7bafb456917ce81e68d3c70581b121fd9cf7f5b71b64"
+    },
+    {
+      "path": "packages/frontend/components/error-fallback.tsx",
+      "sha256": "8ce7bbab2e0c692502217a2a908d9eb6534b639f37b4361dd9767729d8940553"
+    },
+    {
+      "path": "packages/frontend/components/store-cards.tsx",
+      "sha256": "f5897a52673252dead57e1614f28f29fd0db3e798971f5dfd06f22680a7d9cc4"
+    },
+    {
+      "path": "packages/frontend/eslint.config.js",
+      "sha256": "af4f9325c69089cbbc7d121f02a621a4666231a29e799f9e892891816bd08cb1"
+    },
+    {
+      "path": "packages/frontend/expo-env.d.ts",
+      "sha256": "adbacfd824f139d82e40904cadb6b3c4cab6597b255a721d50790cadd5911669"
+    },
+    {
+      "path": "packages/frontend/global.css",
+      "sha256": "59fbb9573d0a0cadce061c616191b346bca39794af47706cb292eee9fe3c528a"
+    },
+    {
+      "path": "packages/frontend/lib/i18n.tsx",
+      "sha256": "bce5ac334445785d311e77f066d7d4881ad8ddc7629b862c78e488ee51eed7c1"
+    },
+    {
+      "path": "packages/frontend/lib/queryClient.ts",
+      "sha256": "4fbf927e5b05fb97b88bfb554ed501ef3910f353d58820f571122cd96fdff2e9"
+    },
+    {
+      "path": "packages/frontend/lib/store.ts",
+      "sha256": "9d77779a774a80161b04d522c2fa280ededdc6bee8a590b9fb50c0dd822ed00c"
+    },
+    {
+      "path": "packages/frontend/lib/themePersistence.ts",
+      "sha256": "d91ee7cfdfdc95fd7e6e67a48171f7c083aaf52c686cb5f8ac52994f46e90894"
+    },
+    {
+      "path": "packages/frontend/metro.config.js",
+      "sha256": "f361f294a641a1ca920ed38aa30ee330ec25e0cebb590d6dc68b3aa8ef78f73d"
+    },
+    {
+      "path": "packages/frontend/nativewind-env.d.ts",
+      "sha256": "0e666d64ea5d902304353cf9d83a14260279ed25fda43f134bc028020e785a69"
+    },
+    {
+      "path": "packages/frontend/worker/index.js",
+      "sha256": "3003f7f0c8d80b01b9b9a5007fc2022b77df188065c809fb8b93e384001d2345"
+    },
+    {
+      "path": "docs/audits/2026-10-03-final-sdk-candidate/README.md",
+      "sha256": "ae01bae23e67e223b3c32f1e17f34f02c98e27778a78e7d3994fbe991a64afd3"
+    }
+  ],
+  "records": [
+    {
+      "path": "docs/audits/2026-10-03-final-sdk-candidate/installed.json",
+      "sha256": "f9fc71749ecaa031bfcea23e023b1a079ae1dc3a79664b452bfa7c904074d925"
+    },
+    {
+      "path": "docs/audits/2026-10-03-final-sdk-candidate/public-client.json",
+      "sha256": "0e443a069db1b6629df9e0622c237b0083a2f49a018fce0635b1ca28e39c04c5"
+    },
+    {
+      "path": "docs/audits/2026-10-03-final-sdk-candidate/candidate-inputs/package.json",
+      "sha256": "444e3020f7aa2e48712afab0aac63046af633d284e03a35077a8cc3e88a918e6"
+    },
+    {
+      "path": "docs/audits/2026-10-03-final-sdk-candidate/candidate-inputs/bun.lock",
+      "sha256": "6e159b49cbab5d2a4fbc1d3f6ca360f2245addf84591662adfbbb6246c95ee64"
+    },
+    {
+      "path": "docs/audits/2026-10-03-final-sdk-candidate/logs/typecheck.log",
+      "sha256": "8366207267355d3e3d5bf3bf6e8c94c5f93f6078c34f08973fa2b38cdda6cc92"
+    },
+    {
+      "path": "docs/audits/2026-10-03-final-sdk-candidate/logs/frontend-build.log",
+      "sha256": "dd42dbb3f3431f240d4a8d0c48f6fa77b2e17e2cd23fa6756b5b79a460f8c9a2"
+    },
+    {
+      "path": "docs/audits/2026-10-03-final-sdk-candidate/logs/install.log",
+      "sha256": "d79769c01878bc09184ce8bebab35d32d2553f1d326533bcfff21d7e1ceb5109"
+    },
+    {
+      "path": "docs/audits/2026-10-03-final-sdk-candidate/logs/edge-tests.log",
+      "sha256": "f9f7ec5bdf1e2ded1fcb98cf10edc1b53011fa2b946bb289885791d5a5e20f69"
+    },
+    {
+      "path": "docs/audits/2026-10-03-final-sdk-candidate/candidate-inputs/packages/frontend/package.json",
+      "sha256": "a9fb7ac8d9203160021ce3fa6a39e6b965f139bcbe7d73b453e4145caea2d0d8"
+    }
+  ],
+  "candidateInputs": [
+    {
+      "path": "docs/audits/2026-10-03-final-sdk-candidate/candidate-inputs/package.json",
+      "sha256": "444e3020f7aa2e48712afab0aac63046af633d284e03a35077a8cc3e88a918e6"
+    },
+    {
+      "path": "docs/audits/2026-10-03-final-sdk-candidate/candidate-inputs/packages/frontend/package.json",
+      "sha256": "a9fb7ac8d9203160021ce3fa6a39e6b965f139bcbe7d73b453e4145caea2d0d8"
+    },
+    {
+      "path": "docs/audits/2026-10-03-final-sdk-candidate/candidate-inputs/bun.lock",
+      "sha256": "6e159b49cbab5d2a4fbc1d3f6ca360f2245addf84591662adfbbb6246c95ee64"
+    }
+  ],
+  "validation": {
+    "typecheckExit": 0,
+    "edgeTests": 2,
+    "frontendExportExit": 0,
+    "registryOxyAdoption": false,
+    "bloomPublished": "7.1.2",
+    "clientRegistrationChanged": false,
+    "deployed": false,
+    "nativeRuntimeTested": false
+  },
+  "preservedFrontendTree": "ba32e0fedd302a55bcd5f31315c79a2994c6d856"
+}

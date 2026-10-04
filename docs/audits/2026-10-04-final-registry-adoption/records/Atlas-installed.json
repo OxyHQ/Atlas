@@ -1,0 +1,42 @@
+{
+  "repository": "OxyHQ/Atlas",
+  "lockSha256": "bec4589a89dd672798a5cf8cfca2123a6242c0c51a094f44521c7bff0beb189c",
+  "installed": true,
+  "installedMembers": [
+    {
+      "importer": "packages/frontend/package.json",
+      "name": "@oxy.so/core",
+      "version": "4.2.0",
+      "root": "/home/nate/Oxy/Atlas/.worktrees/1519-final-sdk-adoption-20261003/node_modules/@oxy.so/core",
+      "files": 581,
+      "allFilesEqual": true
+    },
+    {
+      "importer": "packages/frontend/package.json",
+      "name": "@oxy.so/services",
+      "version": "11.1.0",
+      "root": "/home/nate/Oxy/Atlas/.worktrees/1519-final-sdk-adoption-20261003/node_modules/@oxy.so/services",
+      "files": 2418,
+      "allFilesEqual": true
+    }
+  ],
+  "acceptanceChecksPending": [
+    {
+      "package": "@atlas/frontend",
+      "cwd": "/home/nate/Oxy/Atlas/.worktrees/1519-final-sdk-adoption-20261003/packages/frontend",
+      "scripts": {
+        "typecheck": "tsc --noEmit",
+        "lint": "expo lint"
+      }
+    },
+    {
+      "package": "@atlas/shared-types",
+      "cwd": "/home/nate/Oxy/Atlas/.worktrees/1519-final-sdk-adoption-20261003/packages/shared-types",
+      "scripts": {
+        "build": "tsc -p tsconfig.json"
+      }
+    }
+  ],
+  "merged": false,
+  "deployed": false
+}

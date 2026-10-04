@@ -1,0 +1,30 @@
+{
+  "at": "2026-10-03T19:41:36.604704+00:00",
+  "observedAt": "2026-10-03 19:40:21.398234+00",
+  "application": {
+    "id": "019fe305-3543-750c-997f-650db85b2dec",
+    "name": "Atlas",
+    "type": "first_party",
+    "status": "active",
+    "is_official": true,
+    "owner_account_id": "69b2d3df5d12f58c9800d651",
+    "scopes": [
+      "user:read"
+    ],
+    "redirect_uris": [
+      "https://atlas.oxy.so"
+    ]
+  },
+  "publicCredentialId": "019fe336-8a71-7fbd-8d4d-667c57d755bf",
+  "credentialEnvironment": "production",
+  "publicClientMatchesAuthenticatedGitHubVariable": true,
+  "credentialActiveAndUnexpired": true,
+  "registrationChanged": false,
+  "workflowVariableChanged": false,
+  "cleanup": {
+    "taskStopped": true,
+    "definitionInactive": true,
+    "failures": []
+  },
+  "sourceReceiptSha256": "8652810f61ee3c8dd36bad58079f03f8b5de12abe9c47ed6d9a21c8555b56882"
+}

@@ -1,0 +1,10 @@
+bun install v1.4.2 (744846f84)
+Resolving dependencies
+Resolved, downloaded and extracted [53]
+Saved lockfile
+
+$ bun run build:shared-types
+$ bun run --cwd packages/shared-types build
+$ tsc -p tsconfig.json
+
+929 packages installed [4.62s]

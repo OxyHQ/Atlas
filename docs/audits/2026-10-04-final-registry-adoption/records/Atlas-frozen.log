@@ -1,0 +1,7 @@
+bun install v1.3.14 (0d9b296a)
+
+$ bun run build:shared-types
+$ bun run --cwd packages/shared-types build
+$ tsc -p tsconfig.json
+
+Checked 1050 installs across 977 packages (no changes) [480.00ms]
