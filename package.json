@@ -15,13 +15,16 @@
     "test:edge": "bun test scripts/edge-activity.test.ts"
   },
   "overrides": {
-    "@oxy.so/core": "^4.0.0",
-    "@oxy.so/bloom": "^6.3.0",
-    "@oxy.so/telemetry": "^1.2.0"
+    "@oxy.so/core": "4.2.0",
+    "@oxy.so/bloom": "7.1.2",
+    "@oxy.so/telemetry": "1.2.0",
+    "@oxy.so/contracts": "4.9.0",
+    "@oxy.so/protocol": "1.2.2",
+    "@oxy.so/services": "11.1.0"
   },
   "resolutions": {
-    "@oxy.so/core": "^4.0.0",
-    "@oxy.so/bloom": "^6.3.0",
-    "@oxy.so/telemetry": "^1.2.0"
+    "@oxy.so/core": "4.2.0",
+    "@oxy.so/bloom": "7.1.2",
+    "@oxy.so/telemetry": "1.2.0"
   }
 }
