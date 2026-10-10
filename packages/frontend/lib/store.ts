@@ -21,13 +21,7 @@ import type {
  * here that needs a signed-in account.
  */
 
-export type {
-  StoreCategory,
-  StoreListingSummary,
-  StoreListingDetail,
-  StoreReview,
-  StoreOwnReview,
-};
+export type { StoreCategory, StoreListingSummary, StoreListingDetail, StoreReview, StoreOwnReview };
 
 const queryKeys = {
   categories: ['store', 'categories'] as const,

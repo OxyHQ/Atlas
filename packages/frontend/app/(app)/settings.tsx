@@ -67,7 +67,9 @@ export default function SettingsScreen() {
             value={t(`settings.theme.${mode}`)}
             // Cycles rather than opening a picker: three options do not earn a
             // second screen, and the current one is always on the row.
-            onPress={() => setMode(mode === 'light' ? 'dark' : mode === 'dark' ? 'system' : 'light')}
+            onPress={() =>
+              setMode(mode === 'light' ? 'dark' : mode === 'dark' ? 'system' : 'light')
+            }
           />
         </SettingsListGroup>
 

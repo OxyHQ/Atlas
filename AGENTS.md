@@ -65,11 +65,18 @@ packages/
 bun install
 bun run dev:frontend        # Expo dev server
 bun run build:frontend      # expo export --platform web
+bun run lint                # biome check . + expo lint (minimal ESLint)
+bun run lint:fix            # biome check --write .
+bun run format              # biome format --write .
 ```
+
+**Biome** (root `biome.json`) formats and lints everything. `packages/frontend/eslint.config.js`
+keeps only the preset rules Biome lacks (`expo/*` env-var checks, React Compiler `react-hooks/*`)
+— add a lint rule to Biome, not there. CI runs `bunx biome ci .` and `expo lint` (`lint.yml`).
 
 ## Oxy SDK conventions (do not deviate)
 
 - **One provider:** `OxyProvider` from `@oxy.so/services` (web + native) with the registered `clientId` (`EXPO_PUBLIC_OXY_CLIENT_ID`). Interactive sign-in is the in-app `OxyAccountDialog` — never redirect to an IdP.
-- **Config:** all Expo config comes from `@oxy.so/app-preset` — the app plugin (`['@oxy.so/app-preset', {}]`), `createOxyMetroConfig`, the shared Babel/ESLint configs, `base.css`, and the tsconfig bases. Do not copy-paste that config back into the app; update the preset instead.
+- **Config:** all Expo config comes from `@oxy.so/app-preset` — the app plugin (`['@oxy.so/app-preset', {}]`), `createOxyMetroConfig`, the shared Babel/ESLint configs (ESLint filtered down to what Biome lacks — see Commands), `base.css`, and the tsconfig bases. Do not copy-paste that config back into the app; update the preset instead.
 - **Theming:** NativeWind className-based only, via `BloomThemeProvider`. Never hardcode brand colors.
 - **Session gating:** gate private API calls on `useAuth().canUsePrivateApi`. Atlas has no `(auth)` group — see above — so there is no group swap to be the authority for.

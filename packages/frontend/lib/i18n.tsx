@@ -58,7 +58,8 @@ const en: Messages = {
   'settings.publishYourApp': 'Publish your app',
   'settings.publishHelp': 'Write its store page in the Oxy Console.',
   'settings.about': 'About',
-  'settings.aboutFooter': 'Atlas is the Oxy app store. The apps it lists are built by their own developers.',
+  'settings.aboutFooter':
+    'Atlas is the Oxy app store. The apps it lists are built by their own developers.',
   'settings.oxy': 'Oxy',
   'settings.privacy': 'Privacy policy',
   'settings.terms': 'Terms',
@@ -76,9 +77,8 @@ const I18nContext = createContext<I18nValue | null>(null);
 
 export function LocaleProvider({ children }: { children: ReactNode }) {
   const value = useMemo<I18nValue>(() => {
-    const full = typeof Intl !== 'undefined'
-      ? Intl.DateTimeFormat().resolvedOptions().locale
-      : 'en-US';
+    const full =
+      typeof Intl !== 'undefined' ? Intl.DateTimeFormat().resolvedOptions().locale : 'en-US';
     const base = full.split('-')[0];
     const messages = locales[base] ?? en;
     return {

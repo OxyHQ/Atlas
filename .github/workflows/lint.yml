@@ -1,0 +1,31 @@
+name: Lint
+
+# Biome does formatting and linting for the whole repo (root `biome.json`); the
+# frontend's minimal ESLint keeps only the rules Biome has no equivalent for
+# (eslint-plugin-expo's EXPO_PUBLIC_* checks, the React Compiler hooks checks).
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.14
+
+      - run: bun install --frozen-lockfile --minimum-release-age=0
+
+      - name: Biome
+        run: bunx biome ci .
+
+      - name: ESLint (expo lint, minimal config)
+        run: bun run --cwd packages/frontend lint

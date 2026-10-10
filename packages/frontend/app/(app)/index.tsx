@@ -49,7 +49,8 @@ export default function StoreScreen() {
   const hero = useMemo(() => {
     if (items.length === 0) return undefined;
     return [...items].sort(
-      (a, b) => (b.rating.average ?? -1) - (a.rating.average ?? -1) || b.rating.count - a.rating.count
+      (a, b) =>
+        (b.rating.average ?? -1) - (a.rating.average ?? -1) || b.rating.count - a.rating.count,
     )[0];
   }, [items]);
 
