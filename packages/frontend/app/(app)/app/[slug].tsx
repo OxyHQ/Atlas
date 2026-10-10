@@ -61,14 +61,22 @@ export default function AppPage() {
                 {app.name}
               </Text>
               {app.tagline ? (
-                <Text className="mt-0.5 text-[13px] leading-[18px] text-muted-foreground" numberOfLines={2}>
+                <Text
+                  className="mt-0.5 text-[13px] leading-[18px] text-muted-foreground"
+                  numberOfLines={2}
+                >
                   {app.tagline}
                 </Text>
               ) : null}
             </View>
             {primaryUrl ? (
               <View className="flex-row">
-                <Button appearance="solid" tone="accent" size="sm" onPress={() => Linking.openURL(primaryUrl)}>
+                <Button
+                  appearance="solid"
+                  tone="accent"
+                  size="sm"
+                  onPress={() => Linking.openURL(primaryUrl)}
+                >
                   {t('app.open')}
                 </Button>
               </View>
@@ -154,7 +162,11 @@ function Fact({ label, value, caption }: { label: string; value: string; caption
  * avatar, so it uses the function directly rather than being forced through a
  * component built for round images.
  */
-function Screenshots({ app }: { app: { screenshots: { id: string; fileId: string; caption: string | null }[] } }) {
+function Screenshots({
+  app,
+}: {
+  app: { screenshots: { id: string; fileId: string; caption: string | null }[] };
+}) {
   const { oxyServices } = useOxy();
 
   return (
@@ -192,7 +204,10 @@ function Screenshots({ app }: { app: { screenshots: { id: string; fileId: string
 function RatingsSummary({
   app,
 }: {
-  app: { rating: { average: number | null; count: number }; ratingBreakdown: Record<number, number> };
+  app: {
+    rating: { average: number | null; count: number };
+    ratingBreakdown: Record<number, number>;
+  };
 }) {
   const { t } = useTranslation();
   const average = formatRating(app.rating);
@@ -218,7 +233,10 @@ function RatingsSummary({
               const count = app.ratingBreakdown[star] ?? 0;
               return (
                 <View key={star} className="flex-row items-center gap-2">
-                  <Text className="w-8 text-[11px] text-muted-foreground">{'★'.repeat(1)}{star}</Text>
+                  <Text className="w-8 text-[11px] text-muted-foreground">
+                    {'★'.repeat(1)}
+                    {star}
+                  </Text>
                   <View className="h-1.5 flex-1 overflow-hidden rounded-full bg-card">
                     <View
                       className="h-full rounded-full bg-foreground/60"
@@ -303,7 +321,13 @@ function WriteReview({ slug }: { slug: string }) {
 
       {mine ? (
         <View className="flex-row">
-          <Button appearance="plain" tone="accent" size="sm" loading={remove.isPending} onPress={() => remove.mutate()}>
+          <Button
+            appearance="plain"
+            tone="accent"
+            size="sm"
+            loading={remove.isPending}
+            onPress={() => remove.mutate()}
+          >
             {t('app.withdrawReview')}
           </Button>
         </View>

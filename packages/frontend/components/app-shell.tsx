@@ -145,7 +145,13 @@ export function BottomBar() {
   );
 }
 
-function BottomBarItem({ destination, onPress }: { destination: Destination; onPress: () => void }) {
+function BottomBarItem({
+  destination,
+  onPress,
+}: {
+  destination: Destination;
+  onPress: () => void;
+}) {
   const { t } = useTranslation();
   const active = useIsActive(destination.href);
 
