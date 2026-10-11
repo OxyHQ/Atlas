@@ -1,19 +1,7 @@
-import { observeEdgeRequest } from '@oxy.so/telemetry/edge';
-
-const assetWorker = {
+// Pages Advanced Mode `_worker.js` (bundled by `build:edge`). Every request is
+// served by the static asset handler, unchanged.
+export default {
   fetch(request, env) {
     return env.ASSETS.fetch(request);
-  },
-};
-
-export default {
-  fetch(request, env, ctx) {
-    return observeEdgeRequest({
-      service: 'atlas',
-      request,
-      env,
-      ctx,
-      next: () => assetWorker.fetch(request, env, ctx),
-    });
   },
 };
