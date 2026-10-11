@@ -12,7 +12,7 @@
     "build:frontend": "bun run --cwd packages/frontend export:web",
     "lint": "biome check . && bun run --cwd packages/frontend lint",
     "postinstall": "bun run build:shared-types",
-    "test:edge": "bun test scripts/edge-activity.test.ts",
+    "test:worker": "bun test scripts/worker.test.ts",
     "lint:fix": "biome check --write .",
     "format": "biome format --write ."
   },
@@ -22,14 +22,12 @@
   "overrides": {
     "@oxy.so/core": "4.2.0",
     "@oxy.so/bloom": "7.1.2",
-    "@oxy.so/telemetry": "1.2.0",
     "@oxy.so/contracts": "4.9.0",
     "@oxy.so/protocol": "1.2.2",
     "@oxy.so/services": "11.1.0"
   },
   "resolutions": {
     "@oxy.so/core": "4.2.0",
-    "@oxy.so/bloom": "7.1.2",
-    "@oxy.so/telemetry": "1.2.0"
+    "@oxy.so/bloom": "7.1.2"
   }
 }
