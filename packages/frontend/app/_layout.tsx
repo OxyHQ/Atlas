@@ -14,6 +14,7 @@ import { OxyProvider, useOxy } from '@oxy.so/services';
 import { BloomThemeProvider } from '@oxy.so/bloom/theme';
 import { ImageResolverProvider } from '@oxy.so/bloom/image-resolver';
 import { ConnectionStatusToasts } from '@oxy.so/bloom/connection-status';
+import { OverlayInertBoundary, PortalOutlet, PortalProvider } from '@oxy.so/bloom/portal';
 import { API_URL, OXY_CLIENT_ID } from '@/lib/config';
 import { queryClient } from '@/lib/queryClient';
 import { THEME_PERSIST_KEY, themeStorage } from '@/lib/themePersistence';
@@ -43,8 +44,16 @@ export default function RootLayout() {
             <OxyProvider baseURL={API_URL} clientId={OXY_CLIENT_ID} queryClient={queryClient}>
               <AppImageResolver>
                 <LocaleProvider>
-                  <AppStack />
-                  <StatusBar style="auto" />
+                  {/* Native Bloom surfaces (AliaChatSheet's BottomSheet) render only
+                      through this provider/outlet pair; the outlet sits AFTER the
+                      content it paints over, and the boundary wraps everything else. */}
+                  <PortalProvider>
+                    <OverlayInertBoundary>
+                      <AppStack />
+                      <StatusBar style="auto" />
+                    </OverlayInertBoundary>
+                    <PortalOutlet />
+                  </PortalProvider>
                 </LocaleProvider>
               </AppImageResolver>
             </OxyProvider>
