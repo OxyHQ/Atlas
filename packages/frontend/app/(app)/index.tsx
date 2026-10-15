@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { ScrollView, Text, View } from 'react-native';
 import { Button } from '@oxy.so/bloom/button';
+import { AskAlia } from '@/components/ask-alia';
 import { AppListRow, HeroCard, ShelfTile, ShelfTileSkeleton } from '@/components/store-cards';
 import { useTranslation } from '@/lib/i18n';
 import { useStoreApps, useStoreCategories, type StoreListingSummary } from '@/lib/store';
@@ -44,6 +45,16 @@ export default function StoreScreen() {
       .filter((shelf) => shelf.apps.length > 0);
   }, [items, categories]);
 
+  const screenContext = useMemo(
+    () =>
+      shelves.length > 0
+        ? t('alia.looking.store', {
+            categories: shelves.map((shelf) => shelf.category.label).join(', '),
+          })
+        : undefined,
+    [shelves, t],
+  );
+
   // The hero is the best-reviewed app, falling back to the newest. Whatever it
   // is, it must not appear again immediately below itself.
   const hero = useMemo(() => {
@@ -56,11 +67,16 @@ export default function StoreScreen() {
 
   return (
     <ScrollView className="flex-1" contentContainerStyle={{ paddingBottom: 48 }}>
-      <View className="px-5 pt-6 pb-4">
-        <Text className="text-[34px] font-bold leading-[40px] tracking-[-0.5px] text-foreground">
-          {t('store.title')}
-        </Text>
-        <Text className="mt-0.5 text-[15px] text-muted-foreground">{t('store.subtitle')}</Text>
+      <View className="flex-row items-start justify-between gap-3 px-5 pt-6 pb-4">
+        <View className="flex-1">
+          <Text className="text-[34px] font-bold leading-[40px] tracking-[-0.5px] text-foreground">
+            {t('store.title')}
+          </Text>
+          <Text className="mt-0.5 text-[15px] text-muted-foreground">{t('store.subtitle')}</Text>
+        </View>
+        <View className="pt-2">
+          <AskAlia screenContext={screenContext} />
+        </View>
       </View>
 
       {isLoading ? (

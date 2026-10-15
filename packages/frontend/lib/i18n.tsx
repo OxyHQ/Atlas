@@ -40,6 +40,13 @@ const en: Messages = {
   'app.developerReply': 'From the developer',
   'app.usesThisApp': 'uses this app',
   'app.someone': 'Someone',
+  'alia.ask': 'Ask Alia',
+  'alia.clientContext':
+    'The person is using Atlas, the Oxy app store, where they browse apps built on Oxy, read their details and reviews, and review the apps they use.',
+  'alia.looking.store': 'They are on the storefront, which shows the shelves: {categories}.',
+  'alia.suggestion.discover': 'Which apps should I try first?',
+  'alia.suggestion.compare': 'Help me pick between two apps',
+  'alia.suggestion.publish': 'How do I publish my app here?',
   'nav.store': 'Store',
   'nav.settings': 'Settings',
   'settings.title': 'Settings',
