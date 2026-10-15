@@ -42,10 +42,12 @@ module.exports = {
       // the device; the plugin writes the two iOS purpose strings and the
       // Android RECORD_AUDIO permission.
       [
-        'expo-speech-recognition',
+        'react-native-audio-api',
         {
-          microphonePermission: 'Allow Atlas to hear what you dictate and say to Alia.',
-          speechRecognitionPermission: 'Allow Atlas to turn your speech into text.',
+          iosMicrophonePermission: 'Allow Atlas to hear what you dictate and say to Alia.',
+          iosBackgroundMode: false,
+          androidForegroundService: false,
+          androidPermissions: ['android.permission.RECORD_AUDIO'],
         },
       ],
       // Shared Oxy native config: the iOS keychain group, expo-build-properties
