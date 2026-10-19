@@ -30,7 +30,9 @@ module.exports = {
       output: 'single',
     },
     plugins: [
-      'expo-router',
+      // SDK 58 splits web routes into lazy chunks by default; Atlas keeps the
+      // single synchronous bundle it shipped on SDK 57.
+      ['expo-router', { asyncRoutes: { web: false } }],
       [
         'expo-splash-screen',
         {
