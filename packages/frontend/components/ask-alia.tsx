@@ -1,7 +1,6 @@
 import { useCallback, useMemo, useRef } from 'react';
 import { AliaChatSheet, type AliaChatSheetRef } from '@alia.onl/sdk';
 import { AliaAvatarIcon } from '@alia.onl/sdk/avatar';
-import { VoiceSession } from '@alia.onl/sdk/voice';
 import { Button } from '@oxy.so/bloom/button';
 import { useAuth } from '@oxy.so/services';
 import { useTranslation } from '@/lib/i18n';
@@ -50,7 +49,6 @@ export function AskAlia({ screenContext }: AskAliaProps) {
       {canUsePrivateApi && (
         <AliaChatSheet
           ref={chatRef}
-          voiceSession={VoiceSession}
           clientContext={clientContext}
           welcomeSuggestions={welcomeSuggestions}
         />

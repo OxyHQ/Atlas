@@ -30,6 +30,12 @@ jobs:
         with:
           bun-version: 1.4.3
 
+      # Expo SDK 58's CLI supports Node 22.13+ / 24.3+ only; pin a supported
+      # major instead of trusting the runner image's default Node.
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
       - run: bun install --frozen-lockfile --minimum-release-age=0
 
       # tsc before the export: `expo export` bundles happily through a type
