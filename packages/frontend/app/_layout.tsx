@@ -10,7 +10,7 @@ import { StatusBar } from 'expo-status-bar';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { OxyProvider, useOxy } from '@oxy.so/services/ui/client';
+import { OxyProvider, useAccountColor, useOxy } from '@oxy.so/services/ui/client';
 import { BloomThemeProvider } from '@oxy.so/bloom/theme';
 import { ImageResolverProvider } from '@oxy.so/bloom/image-resolver';
 import { ConnectionStatusToasts } from '@oxy.so/bloom/connection-status';
@@ -44,6 +44,7 @@ export default function RootLayout() {
             <OxyProvider baseURL={API_URL} clientId={OXY_CLIENT_ID} queryClient={queryClient}>
               <AppImageResolver>
                 <LocaleProvider>
+                  <AccountColor />
                   {/* Native Bloom surfaces (AliaChatSheet's BottomSheet) render only
                       through this provider/outlet pair; the outlet sits AFTER the
                       content it paints over, and the boundary wraps everything else. */}
@@ -62,6 +63,15 @@ export default function RootLayout() {
       </KeyboardProvider>
     </GestureHandlerRootView>
   );
+}
+
+/**
+ * Wears the signed-in account's colour. Mounted once, below both OxyProvider
+ * (the session) and BloomThemeProvider (the theme it is applied to).
+ */
+function AccountColor() {
+  useAccountColor();
+  return null;
 }
 
 /**
