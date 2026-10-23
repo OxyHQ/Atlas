@@ -8,7 +8,6 @@ import type { ReactNode } from 'react';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { KeyboardProvider } from 'react-native-keyboard-controller';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { OxyProvider, useAccountColor, useOxy } from '@oxy.so/services/ui/client';
 import { BloomThemeProvider } from '@oxy.so/bloom/theme';
@@ -33,34 +32,35 @@ export function ErrorBoundary(props: { error: Error; retry: () => void }) {
 export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <KeyboardProvider>
-        <SafeAreaProvider>
-          {/* BloomThemeProvider is the outermost theming authority — it must wrap
-              every render branch, including any pre-auth backdrop. OxyProvider is
-              the single session authority (web + native); it owns the QueryClient
-              and never redirects to an external login. */}
-          <BloomThemeProvider persistKey={THEME_PERSIST_KEY} storage={themeStorage}>
-            <ConnectionStatusToasts />
-            <OxyProvider baseURL={API_URL} clientId={OXY_CLIENT_ID} queryClient={queryClient}>
-              <AppImageResolver>
-                <LocaleProvider>
-                  <AccountColor />
-                  {/* Native Bloom surfaces (AliaChatSheet's BottomSheet) render only
-                      through this provider/outlet pair; the outlet sits AFTER the
-                      content it paints over, and the boundary wraps everything else. */}
-                  <PortalProvider>
-                    <OverlayInertBoundary>
-                      <AppStack />
-                      <StatusBar style="auto" />
-                    </OverlayInertBoundary>
-                    <PortalOutlet />
-                  </PortalProvider>
-                </LocaleProvider>
-              </AppImageResolver>
-            </OxyProvider>
-          </BloomThemeProvider>
-        </SafeAreaProvider>
-      </KeyboardProvider>
+      {/* No KeyboardProvider here: OxyProvider mounts the one. A second one above it
+          took the native keyboard events, so every keyboard hook under OxyProvider read
+          a closed keyboard. */}
+      <SafeAreaProvider>
+        {/* BloomThemeProvider is the outermost theming authority — it must wrap
+            every render branch, including any pre-auth backdrop. OxyProvider is
+            the single session authority (web + native); it owns the QueryClient
+            and never redirects to an external login. */}
+        <BloomThemeProvider persistKey={THEME_PERSIST_KEY} storage={themeStorage}>
+          <ConnectionStatusToasts />
+          <OxyProvider baseURL={API_URL} clientId={OXY_CLIENT_ID} queryClient={queryClient}>
+            <AppImageResolver>
+              <LocaleProvider>
+                <AccountColor />
+                {/* Native Bloom surfaces (AliaChatSheet's BottomSheet) render only
+                    through this provider/outlet pair; the outlet sits AFTER the
+                    content it paints over, and the boundary wraps everything else. */}
+                <PortalProvider>
+                  <OverlayInertBoundary>
+                    <AppStack />
+                    <StatusBar style="auto" />
+                  </OverlayInertBoundary>
+                  <PortalOutlet />
+                </PortalProvider>
+              </LocaleProvider>
+            </AppImageResolver>
+          </OxyProvider>
+        </BloomThemeProvider>
+      </SafeAreaProvider>
     </GestureHandlerRootView>
   );
 }
