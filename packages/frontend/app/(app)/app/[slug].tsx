@@ -277,15 +277,15 @@ function LinkRow({ label, url }: { label: string; url: string | null }) {
  */
 function WriteReview({ slug }: { slug: string }) {
   const { t } = useTranslation();
-  const { isAuthenticated, signIn } = useAuth();
+  const { user, canUsePrivateApi, signIn } = useAuth();
   const { data: mine } = useMyStoreReview(slug);
   const write = useWriteStoreReview(slug);
   const remove = useDeleteMyStoreReview(slug);
 
-  const [rating, setRating] = useState<number>(0);
-  const chosen = rating || mine?.rating || 0;
+  const [selection, setSelection] = useState<{ accountId: string; rating: number } | null>(null);
+  const chosen = (selection?.accountId === user?.id ? selection?.rating : 0) || mine?.rating || 0;
 
-  if (!isAuthenticated) {
+  if (!canUsePrivateApi || !user) {
     return (
       <Button appearance="outline" tone="neutral" onPress={() => void signIn()}>
         {t('app.signInToReview')}
@@ -307,7 +307,7 @@ function WriteReview({ slug }: { slug: string }) {
             accessibilityLabel={t('app.starLabel', { count: star })}
             disabled={write.isPending}
             onPress={() => {
-              setRating(star);
+              setSelection({ accountId: user.id, rating: star });
               write.mutate({ rating: star, body: mine?.body ?? null });
             }}
             className="px-1 active:opacity-60"
