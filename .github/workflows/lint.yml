@@ -32,6 +32,8 @@ jobs:
 
       - run: bun install --frozen-lockfile --minimum-release-age=0
 
+      - run: bun run test:store
+
       - name: Biome
         run: bunx biome ci .
 

@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useOxy } from '@oxy.so/services/ui/client';
+import { useAuth, useOxy } from '@oxy.so/services/ui/client';
 import type {
   StoreCategory,
   StoreListingDetail,
@@ -28,7 +28,8 @@ const queryKeys = {
   apps: (category: string | undefined) => ['store', 'apps', category ?? null] as const,
   app: (slug: string) => ['store', 'app', slug] as const,
   reviews: (slug: string, sort: string) => ['store', 'reviews', slug, sort] as const,
-  ownReview: (slug: string) => ['store', 'own-review', slug] as const,
+  ownReview: (slug: string, accountId: string | null) =>
+    ['store-own-review', slug, accountId] as const,
 };
 
 /** The shelves, in the order the store curates them. */
@@ -82,12 +83,18 @@ export function useStoreReviews(slug: string, sort: 'recent' | 'rating' = 'recen
 
 /** The signed-in reader's own review, or null. Skipped entirely when signed out. */
 export function useMyStoreReview(slug: string) {
-  const { oxyServices, isAuthenticated } = useOxy();
+  const { oxyServices } = useOxy();
+  const { user, canUsePrivateApi } = useAuth();
+  const accountId = user?.id ?? null;
+  const epoch = oxyServices.http.getSessionEpoch();
 
   return useQuery({
-    queryKey: queryKeys.ownReview(slug),
-    queryFn: () => oxyServices.store.reviews.mine(slug),
-    enabled: !!slug && isAuthenticated,
+    queryKey: queryKeys.ownReview(slug, accountId),
+    queryFn: () => {
+      if (epoch !== oxyServices.http.getSessionEpoch()) throw new Error('Account changed');
+      return oxyServices.store.reviews.mine(slug);
+    },
+    enabled: !!slug && canUsePrivateApi && !!accountId,
     staleTime: 1000 * 30,
   });
 }
@@ -101,12 +108,21 @@ export function useMyStoreReview(slug: string) {
  */
 export function useWriteStoreReview(slug: string) {
   const { oxyServices } = useOxy();
+  const { user, canUsePrivateApi } = useAuth();
+  const accountId = user?.id ?? null;
+  const epoch = oxyServices.http.getSessionEpoch();
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (input: WriteStoreReviewInput) => oxyServices.store.reviews.write(slug, input),
-    onSuccess: (review) => {
-      queryClient.setQueryData(queryKeys.ownReview(slug), review);
+    mutationKey: ['store-write-review', slug, accountId],
+    mutationFn: async (input: WriteStoreReviewInput) => {
+      if (!canUsePrivateApi || !accountId || epoch !== oxyServices.http.getSessionEpoch())
+        throw new Error('Account changed');
+      const review = await oxyServices.store.reviews.write(slug, input);
+      return { review, accountId };
+    },
+    onSuccess: ({ review, accountId: owner }) => {
+      queryClient.setQueryData(queryKeys.ownReview(slug, owner), review);
       queryClient.invalidateQueries({ queryKey: ['store', 'reviews', slug] });
       queryClient.invalidateQueries({ queryKey: queryKeys.app(slug) });
     },
@@ -116,12 +132,21 @@ export function useWriteStoreReview(slug: string) {
 /** Withdraw the reader's own review. */
 export function useDeleteMyStoreReview(slug: string) {
   const { oxyServices } = useOxy();
+  const { user, canUsePrivateApi } = useAuth();
+  const accountId = user?.id ?? null;
+  const epoch = oxyServices.http.getSessionEpoch();
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: () => oxyServices.store.reviews.deleteMine(slug),
-    onSuccess: () => {
-      queryClient.setQueryData(queryKeys.ownReview(slug), null);
+    mutationKey: ['store-delete-review', slug, accountId],
+    mutationFn: async () => {
+      if (!canUsePrivateApi || !accountId || epoch !== oxyServices.http.getSessionEpoch())
+        throw new Error('Account changed');
+      await oxyServices.store.reviews.deleteMine(slug);
+      return { accountId };
+    },
+    onSuccess: ({ accountId: owner }) => {
+      queryClient.setQueryData(queryKeys.ownReview(slug, owner), null);
       queryClient.invalidateQueries({ queryKey: ['store', 'reviews', slug] });
       queryClient.invalidateQueries({ queryKey: queryKeys.app(slug) });
     },

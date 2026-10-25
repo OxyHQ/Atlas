@@ -15,7 +15,7 @@ import { ImageResolverProvider } from '@oxy.so/bloom/image-resolver';
 import { ConnectionStatusToasts } from '@oxy.so/bloom/connection-status';
 import { OverlayInertBoundary, PortalOutlet, PortalProvider } from '@oxy.so/bloom/portal';
 import { API_URL, OXY_CLIENT_ID } from '@/lib/config';
-import { queryClient } from '@/lib/queryClient';
+import { ATLAS_ACCOUNT_QUERIES, queryClient } from '@/lib/queryClient';
 import { THEME_PERSIST_KEY, themeStorage } from '@/lib/themePersistence';
 import { LocaleProvider } from '@/lib/i18n';
 import { ErrorFallback } from '@/components/error-fallback';
@@ -42,7 +42,12 @@ export default function RootLayout() {
             and never redirects to an external login. */}
         <BloomThemeProvider persistKey={THEME_PERSIST_KEY} storage={themeStorage}>
           <ConnectionStatusToasts />
-          <OxyProvider baseURL={API_URL} clientId={OXY_CLIENT_ID} queryClient={queryClient}>
+          <OxyProvider
+            baseURL={API_URL}
+            clientId={OXY_CLIENT_ID}
+            queryClient={queryClient}
+            accountQueries={ATLAS_ACCOUNT_QUERIES}
+          >
             <AppImageResolver>
               <LocaleProvider>
                 <AccountColor />
