@@ -12,6 +12,7 @@ module.exports = {
     scheme: 'atlas',
     version: '0.1.0',
     orientation: 'portrait',
+    icon: './assets/images/atlas-icon.png',
     userInterfaceStyle: 'automatic',
     newArchEnabled: true,
     experiments: {
@@ -24,10 +25,16 @@ module.exports = {
     },
     android: {
       package: APP_ID,
+      adaptiveIcon: {
+        foregroundImage: './assets/images/atlas-icon_foreground.png',
+        backgroundImage: './assets/images/atlas-icon_background.png',
+        monochromeImage: './assets/images/atlas-icon_monochrome.png',
+      },
     },
     web: {
       bundler: 'metro',
       output: 'single',
+      favicon: './public/favicon.ico',
     },
     plugins: [
       // SDK 58 splits web routes into lazy chunks by default; Atlas keeps the
