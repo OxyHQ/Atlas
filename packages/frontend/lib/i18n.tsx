@@ -22,11 +22,14 @@ const en: Messages = {
   'discover.topRatedApps': 'Top Rated',
   'discover.browseCategories': 'Browse Categories',
   'category.appCount': '{count} apps',
+  'category.appCount.one': '{count} app',
   'search.results': '{count} results',
+  'search.results.one': '{count} result',
   'search.suggestion': 'Search for {query}',
   'app.openApp': 'Open {name}',
   'app.ratings': 'Ratings',
   'app.ratedFact': 'Rated {rating} out of 5, {count} reviews',
+  'app.ratedFact.one': 'Rated {rating} out of 5, {count} review',
   'app.categoryFact': 'Category: {category}',
   'app.websiteFact': 'Website: {host}',
   'app.released': 'Released',
@@ -50,6 +53,7 @@ const en: Messages = {
   'app.category': 'Category',
   'app.reviews': 'Reviews',
   'app.reviewCount': '{count} reviews',
+  'app.reviewCount.one': '{count} review',
   'app.noReviewsYet': 'No reviews yet',
   'app.website': 'Website',
   'app.support': 'Support',
@@ -109,7 +113,12 @@ const locales: Record<string, Messages> = { en };
 
 interface I18nValue {
   locale: string;
-  /** `t('a.b', { count: 3 })` substitutes `{count}`. No pluralization: add i18next when a language needs it. */
+  /**
+   * `t('a.b', { count: 3 })` substitutes `{count}`. A key with a `.one` form
+   * takes it for a count of exactly one — the numeric `count`, or `plural`
+   * when `count` is passed already formatted ("1,284"). English needs no more;
+   * add i18next when a language does.
+   */
   t: (key: string, params?: Record<string, string | number>) => string;
 }
 
@@ -124,7 +133,13 @@ export function LocaleProvider({ children }: { children: ReactNode }) {
     return {
       locale: full,
       t: (key, params) => {
-        const message = messages[key] ?? key;
+        const n =
+          typeof params?.plural === 'number'
+            ? params.plural
+            : typeof params?.count === 'number'
+              ? params.count
+              : undefined;
+        const message = (n === 1 ? messages[`${key}.one`] : undefined) ?? messages[key] ?? key;
         if (!params) return message;
         return message.replace(/\{(\w+)\}/g, (whole, name) =>
           name in params ? String(params[name]) : whole,

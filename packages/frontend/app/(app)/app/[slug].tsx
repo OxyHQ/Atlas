@@ -186,7 +186,10 @@ function Facts({ app }: { app: StoreListingDetail }) {
       rating && app.rating.average !== null
         ? {
             key: 'ratings',
-            label: t('app.reviewCount', { count: formatCount(app.rating.count, locale) }),
+            label: t('app.reviewCount', {
+              count: formatCount(app.rating.count, locale),
+              plural: app.rating.count,
+            }),
             value: rating,
             caption: (
               <Rating
@@ -200,6 +203,7 @@ function Facts({ app }: { app: StoreListingDetail }) {
             accessibilityLabel: t('app.ratedFact', {
               rating,
               count: formatCount(app.rating.count, locale),
+              plural: app.rating.count,
             }),
           }
         : {
