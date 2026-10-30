@@ -1,4 +1,4 @@
-import { useMemo, useState, type ReactNode } from 'react';
+import { createElement, useMemo, useState, type ReactNode } from 'react';
 import { Image, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import type { BloomIconComponent } from '@oxy.so/bloom';
@@ -56,6 +56,19 @@ const CATEGORY_ICONS: Record<string, BloomIconComponent> = {
 
 export function categoryIcon(slug: string): BloomIconComponent {
   return CATEGORY_ICONS[slug] ?? RiShapesLine;
+}
+
+/** A category's glyph as an element, for a slot that takes one. */
+export function CategoryGlyph({
+  slug,
+  size,
+  color,
+}: {
+  slug: string;
+  size: number;
+  color: string;
+}) {
+  return createElement(categoryIcon(slug), { width: size, height: size, fill: color });
 }
 
 /**

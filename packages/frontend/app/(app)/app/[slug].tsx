@@ -23,7 +23,7 @@ import * as Skeleton from '@oxy.so/bloom/skeleton';
 import { useTheme } from '@oxy.so/bloom/theme';
 import { Text } from '@oxy.so/bloom/typography';
 import { useAuth, useOxy } from '@oxy.so/services/ui/client';
-import { categoryIcon } from '@/components/navigation';
+import { CategoryGlyph } from '@/components/navigation';
 import { DetailPage } from '@/components/page';
 import { AppShelf, GUTTER, SectionTitle } from '@/components/store';
 import { useTranslation } from '@/lib/i18n';
@@ -215,11 +215,10 @@ function Facts({ app }: { app: StoreListingDetail }) {
           },
     ];
     if (category) {
-      const Glyph = categoryIcon(category.slug);
       facts.push({
         key: 'category',
         label: t('app.category'),
-        value: <Glyph width={24} height={24} fill={colors.textSecondary} />,
+        value: <CategoryGlyph slug={category.slug} size={24} color={colors.textSecondary} />,
         caption: category.label,
         accessibilityLabel: t('app.categoryFact', { category: category.label }),
         onPress: () =>
