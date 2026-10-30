@@ -1,52 +1,64 @@
 import { useMemo } from 'react';
-import { ScrollView, Text, View } from 'react-native';
-import { Button } from '@oxy.so/bloom/button';
 import { AskAlia } from '@/components/ask-alia';
+import { CategoryList } from '@/components/category-list';
 import { TopLevelPage } from '@/components/page';
-import { AppListRow, HeroCard, ShelfTileSkeleton } from '@/components/store-cards';
+import {
+  AppShelf,
+  FeaturedShelf,
+  SectionTitle,
+  StoreEmpty,
+  StoreError,
+  StorefrontSkeleton,
+} from '@/components/store';
+import { View } from 'react-native';
 import { useTranslation } from '@/lib/i18n';
-import { useStoreApps, useStoreCategories } from '@/lib/store';
+import { useStorefront, type StoreListingSummary } from '@/lib/store';
+
+/** How many editorial cards lead the page. */
+const SPOTLIGHT = 5;
 
 /**
- * Discover, the store's front page: a hero, then everything as a list. The
- * per-category shelves are the Apps page's.
+ * Discover, the store's front page, in the order the App Store's opens:
+ * editorial cards first, then shelves of apps, then the way into the
+ * categories.
  *
- * Readable signed out — every call it makes is a public endpoint — so there is
- * no session check anywhere on this screen and no blank frame while cold boot
- * resolves.
-
+ * Every section is derived from the catalogue and shown only when it has
+ * something behind it. Atlas has no editors, so the cards say what they are —
+ * "Top rated" for the best-reviewed apps, "New on Atlas" for the latest — and
+ * an empty store says it is empty rather than inventing a front page.
+ *
+ * Readable signed out: every read is public, so there is no session check here
+ * and no blank frame while cold boot resolves.
  */
-export default function StoreScreen() {
+export default function DiscoverScreen() {
   const { t } = useTranslation();
-  const { data: categories } = useStoreCategories();
-  const { data: page, isLoading, isError, refetch } = useStoreApps();
+  const { apps, shelves, topRated, categories, isLoading, isError, refetch } = useStorefront();
 
-  const items = useMemo(() => page?.items ?? [], [page]);
+  // Best-rated first, then the newest not already shown, so an unreviewed store
+  // still has a front page made of what it really has.
+  const spotlight = useMemo(() => {
+    const cards: { item: StoreListingSummary; eyebrow: string }[] = [];
+    const seen = new Set<string>();
+    for (const item of topRated.slice(0, 3)) {
+      cards.push({ item, eyebrow: t('discover.topRated') });
+      seen.add(item.slug);
+    }
+    for (const item of apps) {
+      if (cards.length >= SPOTLIGHT) break;
+      if (seen.has(item.slug)) continue;
+      cards.push({ item, eyebrow: t('discover.new') });
+      seen.add(item.slug);
+    }
+    return cards;
+  }, [apps, topRated, t]);
 
-  // What Alia is told the reader is looking at: the shelves that have something
-  // on them, in the store's order.
-  const shelfLabels = useMemo(() => {
-    const present = new Set(items.flatMap((item) => (item.category ? [item.category.slug] : [])));
-    return (categories ?? []).filter((c) => present.has(c.slug)).map((c) => c.label);
-  }, [items, categories]);
-
-  const screenContext = useMemo(
-    () =>
-      shelfLabels.length > 0
-        ? t('alia.looking.store', { categories: shelfLabels.join(', ') })
-        : undefined,
-    [shelfLabels, t],
-  );
-
-  // The hero is the best-reviewed app, falling back to the newest. Whatever it
-  // is, it must not appear again immediately below itself.
-  const hero = useMemo(() => {
-    if (items.length === 0) return undefined;
-    return [...items].sort(
-      (a, b) =>
-        (b.rating.average ?? -1) - (a.rating.average ?? -1) || b.rating.count - a.rating.count,
-    )[0];
-  }, [items]);
+  // What Alia is told the reader is looking at: the shelves, in the store's order.
+  const screenContext =
+    shelves.length > 0
+      ? t('alia.looking.store', {
+          categories: shelves.map((shelf) => shelf.category.label).join(', '),
+        })
+      : undefined;
 
   return (
     <TopLevelPage
@@ -55,81 +67,28 @@ export default function StoreScreen() {
       titleAccessory={<AskAlia screenContext={screenContext} />}
     >
       {isLoading ? (
-        <LoadingStorefront />
+        <StorefrontSkeleton />
       ) : isError ? (
-        <View className="items-center gap-3 px-5 py-20">
-          <Text className="text-base text-muted-foreground">{t('store.loadFailed')}</Text>
-          <Button appearance="outline" tone="neutral" size="sm" onPress={() => refetch()}>
-            {t('store.retry')}
-          </Button>
-        </View>
-      ) : items.length === 0 ? (
-        <View className="items-center gap-2 px-8 py-20">
-          <Text className="text-3xl opacity-30">◳</Text>
-          <Text className="text-center text-base text-muted-foreground">
-            {t('store.emptyStore')}
-          </Text>
-        </View>
+        <StoreError onRetry={() => void refetch()} />
+      ) : apps.length === 0 ? (
+        <StoreEmpty title={t('store.emptyStore')} description={t('store.emptyStoreHelp')} />
       ) : (
         <>
-          {hero ? (
-            <View className="px-5 pb-2">
-              <HeroCard item={hero} />
+          <FeaturedShelf title={t('discover.spotlight')} cards={spotlight} />
+          <AppShelf title={t('discover.newApps')} apps={apps.slice(0, 15)} />
+          {topRated.length > 0 ? (
+            <AppShelf title={t('discover.topRatedApps')} apps={topRated.slice(0, 15)} ranked />
+          ) : null}
+          {categories.length > 0 ? (
+            <View className="pt-8">
+              <View className="px-5">
+                <SectionTitle>{t('discover.browseCategories')}</SectionTitle>
+              </View>
+              <CategoryList categories={categories} />
             </View>
           ) : null}
-
-          <Section title={t('store.allApps')}>
-            <View>
-              {items.map((item, index) => (
-                <AppListRow key={item.slug} item={item} divider={index < items.length - 1} />
-              ))}
-            </View>
-          </Section>
         </>
       )}
     </TopLevelPage>
-  );
-}
-
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
-  return (
-    <View className="pt-6">
-      <Text className="px-5 pb-2 text-[22px] font-bold tracking-[-0.3px] text-foreground">
-        {title}
-      </Text>
-      <View className="px-5">{children}</View>
-    </View>
-  );
-}
-
-/**
- * The storefront's own shape while it loads.
- *
- * Same geometry as the real thing — a hero block and a shelf of tiles — so the
- * page does not reflow when the data lands, which is the only thing a skeleton
- * is for.
- */
-function LoadingStorefront() {
-  return (
-    <>
-      <View className="px-5">
-        <View className="h-[184px] rounded-3xl bg-card" />
-      </View>
-      <View className="pt-6">
-        <View className="px-5 pb-3">
-          <View className="h-5 w-40 rounded-full bg-card" />
-        </View>
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={{ paddingHorizontal: 20, gap: 14 }}
-          scrollEnabled={false}
-        >
-          {[0, 1, 2, 3].map((tile) => (
-            <ShelfTileSkeleton key={tile} />
-          ))}
-        </ScrollView>
-      </View>
-    </>
   );
 }

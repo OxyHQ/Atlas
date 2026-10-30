@@ -1,12 +1,14 @@
 import { useMemo, useState } from 'react';
-import { Pressable, Text, View } from 'react-native';
+import { View } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 import { EmptyState } from '@oxy.so/bloom/empty-state';
+import { Item } from '@oxy.so/bloom/item';
+import { useTheme } from '@oxy.so/bloom/theme';
 import { RiSearchLine } from '@oxy.so/bloom/icons/RiSearchLine';
 import { Search } from '@oxy.so/bloom/search';
 import { CategoryList } from '@/components/category-list';
 import { TopLevelPage } from '@/components/page';
-import { AppListRow } from '@/components/store-cards';
+import { AppGrid, SectionTitle } from '@/components/store';
 import { useTranslation } from '@/lib/i18n';
 import { useStoreApps, useStoreCategories, type StoreListingSummary } from '@/lib/store';
 
@@ -37,6 +39,7 @@ function matches(item: StoreListingSummary, needle: string): boolean {
 
 function SearchPage({ initialQuery }: { initialQuery: string }) {
   const { t } = useTranslation();
+  const { colors } = useTheme();
   const [query, setQuery] = useState(initialQuery);
   const { data: categories } = useStoreCategories();
   const { data: page, isLoading } = useStoreApps();
@@ -63,30 +66,25 @@ function SearchPage({ initialQuery }: { initialQuery: string }) {
         <>
           {categories && categories.length > 0 ? (
             <View className="px-5 pb-6">
-              <Text className="pb-1 text-[22px] font-bold tracking-[-0.3px] text-foreground">
-                {t('search.discover')}
-              </Text>
-              {categories.map((category, index) => (
-                <Pressable
+              <SectionTitle>{t('search.discover')}</SectionTitle>
+              {categories.map((category) => (
+                <Item
                   key={category.slug}
                   accessibilityRole="button"
+                  accessibilityLabel={t('search.suggestion', { query: category.label })}
+                  leading={<RiSearchLine width={18} height={18} fill={colors.textSecondary} />}
+                  title={category.label}
+                  titleStyle={{ color: colors.primary }}
                   onPress={() => setQuery(category.label)}
-                  className={
-                    index < categories.length - 1
-                      ? 'flex-row items-center gap-3 border-b border-border/50 py-3 active:opacity-60'
-                      : 'flex-row items-center gap-3 py-3 active:opacity-60'
-                  }
-                >
-                  <Text className="text-[17px] text-primary">{category.label}</Text>
-                </Pressable>
+                />
               ))}
             </View>
           ) : null}
           {categories && categories.length > 0 ? (
             <View>
-              <Text className="px-5 pb-2 text-[22px] font-bold tracking-[-0.3px] text-foreground">
-                {t('nav.categories')}
-              </Text>
+              <View className="px-5">
+                <SectionTitle>{t('nav.categories')}</SectionTitle>
+              </View>
               <CategoryList categories={categories} />
             </View>
           ) : null}
@@ -98,11 +96,7 @@ function SearchPage({ initialQuery }: { initialQuery: string }) {
           description={t('search.noResultsHelp', { query: query.trim() })}
         />
       ) : (
-        <View className="px-5">
-          {results.map((item, index) => (
-            <AppListRow key={item.slug} item={item} divider={index < results.length - 1} />
-          ))}
-        </View>
+        <AppGrid title={t('search.results', { count: results.length })} apps={results} />
       )}
     </TopLevelPage>
   );

@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuth, useOxy } from '@oxy.so/services/ui/client';
 import type {
@@ -52,7 +53,9 @@ export function useStoreApps(category?: string) {
 
   return useQuery({
     queryKey: queryKeys.apps(category),
-    queryFn: () => oxyServices.store.apps({ category, limit: 48 }),
+    // The API's ceiling. The storefront groups one read in memory rather than
+    // asking once per shelf.
+    queryFn: () => oxyServices.store.apps({ category, limit: 100 }),
     staleTime: 1000 * 60 * 2,
   });
 }
@@ -163,4 +166,76 @@ export function useDeleteMyStoreReview(slug: string) {
 export function formatRating(rating: { average: number | null; count: number }): string | null {
   if (rating.average === null) return null;
   return rating.average.toFixed(1);
+}
+
+/** A shelf of the storefront: a category and its published apps, newest first. */
+export interface StoreShelf {
+  category: StoreCategory;
+  apps: StoreListingSummary[];
+}
+
+export interface Storefront {
+  categories: StoreCategory[];
+  /** Every published app, newest first (the API's order). */
+  apps: StoreListingSummary[];
+  /** One shelf per category that has an app on it, in the store's curated order. */
+  shelves: StoreShelf[];
+  /**
+   * The chart: apps people have rated, best first (average, then how many
+   * ratings it rests on). An unrated app is not on it: it has no rating to
+   * rank, and ranking it last would read as rated worst.
+   */
+  topRated: StoreListingSummary[];
+}
+
+/**
+ * What the storefront shows, derived from the two public reads and nothing
+ * else. Pure, so every page that shows the catalogue organises it the same way.
+ */
+export function organiseStorefront(
+  apps: readonly StoreListingSummary[],
+  categories: readonly StoreCategory[],
+): Storefront {
+  const byCategory = new Map<string, StoreListingSummary[]>();
+  for (const app of apps) {
+    if (!app.category) continue;
+    const shelf = byCategory.get(app.category.slug);
+    if (shelf) shelf.push(app);
+    else byCategory.set(app.category.slug, [app]);
+  }
+  const topRated = apps
+    .filter((app) => app.rating.average !== null)
+    .sort(
+      (a, b) =>
+        (b.rating.average ?? 0) - (a.rating.average ?? 0) || b.rating.count - a.rating.count,
+    );
+  return {
+    categories: [...categories],
+    apps: [...apps],
+    shelves: categories
+      .map((category) => ({ category, apps: byCategory.get(category.slug) ?? [] }))
+      .filter((shelf) => shelf.apps.length > 0),
+    topRated,
+  };
+}
+
+/** The storefront's two reads, organised. */
+export function useStorefront() {
+  const categories = useStoreCategories();
+  const apps = useStoreApps();
+  const storefront = useMemo(
+    () => organiseStorefront(apps.data?.items ?? [], categories.data ?? []),
+    [apps.data, categories.data],
+  );
+  return {
+    ...storefront,
+    isLoading: apps.isLoading,
+    isError: apps.isError,
+    refetch: apps.refetch,
+  };
+}
+
+/** A count in the reader's digits and grouping: 1284 → "1,284" (en), "1.284" (de). */
+export function formatCount(count: number, locale: string): string {
+  return new Intl.NumberFormat(locale).format(count);
 }

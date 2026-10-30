@@ -1,17 +1,16 @@
 import { useMemo } from 'react';
-import { Text, View } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
-import { Button } from '@oxy.so/bloom/button';
 import { EmptyState } from '@oxy.so/bloom/empty-state';
 import { categoryIcon } from '@/components/navigation';
 import { TopLevelPage } from '@/components/page';
-import { AppListRow } from '@/components/store-cards';
+import { AppGrid, StoreError, StorefrontSkeleton } from '@/components/store';
 import { useTranslation } from '@/lib/i18n';
 import { useStoreApps, useStoreCategories } from '@/lib/store';
 
 /**
- * One category: its label as the large title, the store's description under it,
- * then its apps as rows.
+ * One category — the page a shelf's "See All" opens: its label as the large
+ * title, the store's description under it, then every app in it as a grid of
+ * lockups.
  *
  * The label and description come from the categories read, never from the slug:
  * an unknown slug is a category the store does not have, and says so, rather
@@ -39,13 +38,10 @@ export default function CategoryScreen() {
 
   return (
     <TopLevelPage title={category?.label ?? ''} subtitle={category?.description ?? undefined}>
-      {isLoading || categoriesLoading ? null : isError ? (
-        <View className="items-center gap-3 px-5 py-20">
-          <Text className="text-base text-muted-foreground">{t('store.loadFailed')}</Text>
-          <Button appearance="outline" tone="neutral" size="sm" onPress={() => refetch()}>
-            {t('store.retry')}
-          </Button>
-        </View>
+      {isLoading || categoriesLoading ? (
+        <StorefrontSkeleton shelves={1} />
+      ) : isError ? (
+        <StoreError onRetry={() => void refetch()} />
       ) : items.length === 0 ? (
         <EmptyState
           icon={categoryIcon(slug)}
@@ -53,11 +49,7 @@ export default function CategoryScreen() {
           description={t('category.emptyHelp')}
         />
       ) : (
-        <View className="px-5 pt-2">
-          {items.map((item, index) => (
-            <AppListRow key={item.slug} item={item} divider={index < items.length - 1} />
-          ))}
-        </View>
+        <AppGrid title={t('category.appCount', { count: items.length })} apps={items} />
       )}
     </TopLevelPage>
   );
