@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { Image, Linking, Pressable, ScrollView, Text, View } from 'react-native';
-import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Avatar } from '@oxy.so/bloom/avatar';
 import { Button } from '@oxy.so/bloom/button';
 import { useAuth, useOxy } from '@oxy.so/services/ui/client';
+import { DetailPage } from '@/components/page';
 import { useTranslation } from '@/lib/i18n';
 import {
   formatRating,
@@ -32,16 +33,23 @@ export default function AppPage() {
   const { data: app, isLoading, isError } = useStoreApp(slug);
   const { data: reviews } = useStoreReviews(slug);
 
-  if (isLoading) return <AppPageSkeleton />;
+  if (isLoading)
+    return (
+      <DetailPage>
+        <AppPageSkeleton />
+      </DetailPage>
+    );
 
   if (isError || !app) {
     return (
-      <View className="flex-1 items-center justify-center gap-3 px-6">
-        <Text className="text-base text-muted-foreground">{t('app.notFound')}</Text>
-        <Button appearance="plain" tone="accent" onPress={() => router.replace('/')}>
-          {t('app.backToStore')}
-        </Button>
-      </View>
+      <DetailPage>
+        <View className="items-center justify-center gap-3 px-6 py-20">
+          <Text className="text-base text-muted-foreground">{t('app.notFound')}</Text>
+          <Button appearance="plain" tone="accent" onPress={() => router.replace('/')}>
+            {t('app.backToStore')}
+          </Button>
+        </View>
+      </DetailPage>
     );
   }
 
@@ -49,91 +57,88 @@ export default function AppPage() {
   const primaryUrl = app.websiteUrl;
 
   return (
-    <>
-      <Stack.Screen options={{ headerShown: true, title: app.name }} />
-      <ScrollView className="flex-1" contentContainerStyle={{ paddingBottom: 48 }}>
-        {/* Identity + action. */}
-        <View className="flex-row items-start gap-4 px-5 pt-6">
-          <Avatar source={app.icon} variant="full" size={110} shape="squircle" name={app.name} />
-          <View className="min-w-0 flex-1 gap-2 pt-1">
-            <View>
-              <Text className="text-[22px] font-bold leading-7 text-foreground" numberOfLines={2}>
-                {app.name}
+    <DetailPage title={app.name}>
+      {/* Identity + action. */}
+      <View className="flex-row items-start gap-4 px-5 pt-6">
+        <Avatar source={app.icon} variant="full" size={110} shape="squircle" name={app.name} />
+        <View className="min-w-0 flex-1 gap-2 pt-1">
+          <View>
+            <Text className="text-[22px] font-bold leading-7 text-foreground" numberOfLines={2}>
+              {app.name}
+            </Text>
+            {app.tagline ? (
+              <Text
+                className="mt-0.5 text-[13px] leading-[18px] text-muted-foreground"
+                numberOfLines={2}
+              >
+                {app.tagline}
               </Text>
-              {app.tagline ? (
-                <Text
-                  className="mt-0.5 text-[13px] leading-[18px] text-muted-foreground"
-                  numberOfLines={2}
-                >
-                  {app.tagline}
-                </Text>
-              ) : null}
-            </View>
-            {primaryUrl ? (
-              <View className="flex-row">
-                <Button
-                  appearance="solid"
-                  tone="accent"
-                  size="sm"
-                  onPress={() => Linking.openURL(primaryUrl)}
-                >
-                  {t('app.open')}
-                </Button>
-              </View>
             ) : null}
           </View>
-        </View>
-
-        {/* The facts strip: what the App Store puts under the icon, in the same
-            scrolling row so it never wraps into a ragged block. */}
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={{ paddingHorizontal: 20, gap: 28, paddingVertical: 20 }}
-        >
-          <Fact
-            label={t('app.reviewCount', { count: app.rating.count })}
-            value={rating ?? '—'}
-            caption={rating ? '★★★★★' : t('app.noReviewsYet')}
-          />
-          {app.category ? (
-            <Fact label={t('app.category')} value={app.category.label} caption={t('store.title')} />
+          {primaryUrl ? (
+            <View className="flex-row">
+              <Button
+                appearance="solid"
+                tone="accent"
+                size="sm"
+                onPress={() => Linking.openURL(primaryUrl)}
+              >
+                {t('app.open')}
+              </Button>
+            </View>
           ) : null}
-          <Fact label={t('app.developer')} value="Oxy" caption={t('app.developerCaption')} />
-        </ScrollView>
+        </View>
+      </View>
 
-        {app.screenshots.length > 0 ? <Screenshots app={app} /> : null}
-
-        {app.description ? (
-          <View className="gap-2 px-5 pt-2">
-            <Text className="text-[20px] font-bold tracking-[-0.2px] text-foreground">
-              {t('app.about')}
-            </Text>
-            <Text className="text-[15px] leading-[21px] text-foreground">{app.description}</Text>
-          </View>
+      {/* The facts strip: what the App Store puts under the icon, in the same
+            scrolling row so it never wraps into a ragged block. */}
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={{ paddingHorizontal: 20, gap: 28, paddingVertical: 20 }}
+      >
+        <Fact
+          label={t('app.reviewCount', { count: app.rating.count })}
+          value={rating ?? '—'}
+          caption={rating ? '★★★★★' : t('app.noReviewsYet')}
+        />
+        {app.category ? (
+          <Fact label={t('app.category')} value={app.category.label} caption={t('store.title')} />
         ) : null}
-
-        <RatingsSummary app={app} />
-
-        <View className="gap-3 px-5 pt-4">
-          {(reviews?.items.length ?? 0) === 0 ? (
-            <Text className="text-[15px] text-muted-foreground">{t('app.beFirst')}</Text>
-          ) : (
-            reviews!.items.map((review) => <ReviewCard key={review.id} review={review} />)
-          )}
-        </View>
-
-        <View className="px-5 pt-5">
-          <WriteReview slug={slug} />
-        </View>
-
-        <View className="gap-1 px-5 pt-8">
-          <LinkRow label={t('app.support')} url={app.supportUrl} />
-          <LinkRow label={t('app.privacy')} url={app.privacyPolicyUrl} />
-          <LinkRow label={t('app.terms')} url={app.termsUrl} />
-        </View>
+        <Fact label={t('app.developer')} value="Oxy" caption={t('app.developerCaption')} />
       </ScrollView>
-    </>
+
+      {app.screenshots.length > 0 ? <Screenshots app={app} /> : null}
+
+      {app.description ? (
+        <View className="gap-2 px-5 pt-2">
+          <Text className="text-[20px] font-bold tracking-[-0.2px] text-foreground">
+            {t('app.about')}
+          </Text>
+          <Text className="text-[15px] leading-[21px] text-foreground">{app.description}</Text>
+        </View>
+      ) : null}
+
+      <RatingsSummary app={app} />
+
+      <View className="gap-3 px-5 pt-4">
+        {(reviews?.items ?? []).length === 0 ? (
+          <Text className="text-[15px] text-muted-foreground">{t('app.beFirst')}</Text>
+        ) : (
+          (reviews?.items ?? []).map((review) => <ReviewCard key={review.id} review={review} />)
+        )}
+      </View>
+
+      <View className="px-5 pt-5">
+        <WriteReview slug={slug} />
+      </View>
+
+      <View className="gap-1 px-5 pt-8">
+        <LinkRow label={t('app.support')} url={app.supportUrl} />
+        <LinkRow label={t('app.privacy')} url={app.privacyPolicyUrl} />
+        <LinkRow label={t('app.terms')} url={app.termsUrl} />
+      </View>
+    </DetailPage>
   );
 }
 
@@ -373,7 +378,7 @@ function ReviewCard({ review }: { review: StoreReview }) {
 /** The page's own shape while it loads, so nothing jumps when the data lands. */
 function AppPageSkeleton() {
   return (
-    <View className="flex-1 px-5 pt-6">
+    <View className="px-5 pt-6">
       <View className="flex-row items-start gap-4">
         <View className="h-[110px] w-[110px] rounded-[26px] bg-card" />
         <View className="flex-1 gap-2 pt-2">

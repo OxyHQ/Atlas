@@ -1,14 +1,15 @@
 import { useMemo } from 'react';
 import { ScrollView, Text, View } from 'react-native';
 import { Button } from '@oxy.so/bloom/button';
-import { AskAlia } from '@/components/ask-alia';
-import { AppListRow, HeroCard, ShelfTile, ShelfTileSkeleton } from '@/components/store-cards';
+import { CategoryList } from '@/components/category-list';
+import { TopLevelPage } from '@/components/page';
+import { ShelfTile, ShelfTileSkeleton } from '@/components/store-cards';
 import { useTranslation } from '@/lib/i18n';
 import { useStoreApps, useStoreCategories, type StoreListingSummary } from '@/lib/store';
 
 /**
- * The storefront, in the App Store's grammar: a hero, then a shelf per
- * category, then everything as a list.
+ * The catalogue: a shelf per category, in the store's curated order, then the
+ * categories themselves — on a phone this page is how Categories is reached.
  *
  * Readable signed out — every call it makes is a public endpoint — so there is
  * no session check anywhere on this screen and no blank frame while cold boot
@@ -17,12 +18,8 @@ import { useStoreApps, useStoreCategories, type StoreListingSummary } from '@/li
  * The shelves are grouped in memory from ONE `/store/apps` read rather than a
  * request per category. A store with nine shelves would otherwise open with
  * nine round trips, and the payload it already has carries each app's category.
- *
- * Responsive is CSS: the two-up list is `rail:w-1/2`, not a width read, so
- * resizing is the browser reflowing rather than React re-rendering on every
- * frame.
  */
-export default function StoreScreen() {
+export default function AppsScreen() {
   const { t } = useTranslation();
   const { data: categories } = useStoreCategories();
   const { data: page, isLoading, isError, refetch } = useStoreApps();
@@ -45,40 +42,8 @@ export default function StoreScreen() {
       .filter((shelf) => shelf.apps.length > 0);
   }, [items, categories]);
 
-  const screenContext = useMemo(
-    () =>
-      shelves.length > 0
-        ? t('alia.looking.store', {
-            categories: shelves.map((shelf) => shelf.category.label).join(', '),
-          })
-        : undefined,
-    [shelves, t],
-  );
-
-  // The hero is the best-reviewed app, falling back to the newest. Whatever it
-  // is, it must not appear again immediately below itself.
-  const hero = useMemo(() => {
-    if (items.length === 0) return undefined;
-    return [...items].sort(
-      (a, b) =>
-        (b.rating.average ?? -1) - (a.rating.average ?? -1) || b.rating.count - a.rating.count,
-    )[0];
-  }, [items]);
-
   return (
-    <ScrollView className="flex-1" contentContainerStyle={{ paddingBottom: 48 }}>
-      <View className="flex-row items-start justify-between gap-3 px-5 pt-6 pb-4">
-        <View className="flex-1">
-          <Text className="text-[34px] font-bold leading-[40px] tracking-[-0.5px] text-foreground">
-            {t('store.title')}
-          </Text>
-          <Text className="mt-0.5 text-[15px] text-muted-foreground">{t('store.subtitle')}</Text>
-        </View>
-        <View className="pt-2">
-          <AskAlia screenContext={screenContext} />
-        </View>
-      </View>
-
+    <TopLevelPage title={t('nav.apps')}>
       {isLoading ? (
         <LoadingStorefront />
       ) : isError ? (
@@ -97,39 +62,21 @@ export default function StoreScreen() {
         </View>
       ) : (
         <>
-          {hero ? (
-            <View className="px-5 pb-2">
-              <HeroCard item={hero} />
-            </View>
-          ) : null}
-
           {shelves.map((shelf) => (
             <Shelf key={shelf.category.slug} label={shelf.category.label} apps={shelf.apps} />
           ))}
 
-          <Section title={t('store.allApps')}>
-            <View className="flex-col rail:flex-row rail:flex-wrap rail:-mx-2.5">
-              {items.map((item, index) => (
-                <View key={item.slug} className="w-full rail:w-1/2 rail:px-2.5">
-                  <AppListRow item={item} divider={index < items.length - 1} />
-                </View>
-              ))}
+          {categories && categories.length > 0 ? (
+            <View className="pt-6">
+              <Text className="px-5 pb-2 text-[22px] font-bold tracking-[-0.3px] text-foreground">
+                {t('nav.categories')}
+              </Text>
+              <CategoryList categories={categories} />
             </View>
-          </Section>
+          ) : null}
         </>
       )}
-    </ScrollView>
-  );
-}
-
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
-  return (
-    <View className="pt-6">
-      <Text className="px-5 pb-2 text-[22px] font-bold tracking-[-0.3px] text-foreground">
-        {title}
-      </Text>
-      <View className="px-5">{children}</View>
-    </View>
+    </TopLevelPage>
   );
 }
 
