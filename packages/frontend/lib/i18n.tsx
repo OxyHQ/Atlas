@@ -9,23 +9,52 @@ type Messages = Record<string, string>;
 const en: Messages = {
   'store.title': 'Atlas',
   'store.subtitle': 'Apps built on Oxy.',
-  'store.allApps': 'All apps',
-  'store.featured': 'Featured',
   'store.view': 'View',
   'store.emptyStore': 'No apps have been published yet.',
-  'store.emptyShelf': 'Nothing on this shelf yet.',
+  'store.emptyStoreHelp':
+    'Apps appear here once their developers publish them from the Oxy Console.',
+  'store.viewApp': 'View {name}',
+  'store.featuredLabel': '{eyebrow}: {name}',
+  'discover.spotlight': 'Spotlight',
+  'discover.topRated': 'Top rated',
+  'discover.new': 'New on Atlas',
+  'discover.newApps': 'New on Atlas',
+  'discover.topRatedApps': 'Top Rated',
+  'discover.browseCategories': 'Browse Categories',
+  'category.appCount': '{count} apps',
+  'category.appCount.one': '{count} app',
+  'search.results': '{count} results',
+  'search.results.one': '{count} result',
+  'search.suggestion': 'Search for {query}',
+  'app.openApp': 'Open {name}',
+  'app.ratings': 'Ratings',
+  'app.ratedFact': 'Rated {rating} out of 5, {count} reviews',
+  'app.ratedFact.one': 'Rated {rating} out of 5, {count} review',
+  'app.categoryFact': 'Category: {category}',
+  'app.websiteFact': 'Website: {host}',
+  'app.released': 'Released',
+  'app.facts': 'About this app',
+  'app.preview': 'Preview',
+  'app.screenshotsFor': 'Screenshots for',
+  'app.screenshotLabel': 'Screenshot {index} of {count}',
+  'app.ratingsAndReviews': 'Ratings & Reviews',
+  'app.tapToRate': 'Tap to rate:',
+  'app.yourRating': 'Your rating:',
+  'app.supportEmail': 'Support email',
+  'app.information': 'Information',
+  'app.mightAlsoLike': 'You Might Also Like',
+  'platform.phone': 'Phone',
+  'platform.tablet': 'Tablet',
+  'platform.desktop': 'Desktop',
+  'platform.web': 'Web',
   'store.loadFailed': 'The store could not be loaded.',
   'store.retry': 'Try again',
-  'app.about': 'About',
   'app.open': 'Open',
   'app.category': 'Category',
-  'app.developer': 'Developer',
-  'app.developerCaption': 'Oxy ecosystem',
-  'app.outOfFive': 'out of 5',
   'app.reviews': 'Reviews',
   'app.reviewCount': '{count} reviews',
+  'app.reviewCount.one': '{count} review',
   'app.noReviewsYet': 'No reviews yet',
-  'app.beFirst': 'Be the first to review it.',
   'app.website': 'Website',
   'app.support': 'Support',
   'app.privacy': 'Privacy policy',
@@ -34,8 +63,6 @@ const en: Messages = {
   'app.backToStore': 'Back to the store',
   'app.signInToReview': 'Sign in to review',
   'app.rateIt': 'Rate this app',
-  'app.yourReview': 'Your review',
-  'app.starLabel': '{count} stars',
   'app.withdrawReview': 'Withdraw my review',
   'app.developerReply': 'From the developer',
   'app.usesThisApp': 'uses this app',
@@ -47,8 +74,18 @@ const en: Messages = {
   'alia.suggestion.discover': 'Which apps should I try first?',
   'alia.suggestion.compare': 'Help me pick between two apps',
   'alia.suggestion.publish': 'How do I publish my app here?',
-  'nav.store': 'Store',
+  'nav.discover': 'Discover',
+  'nav.apps': 'Apps',
+  'nav.categories': 'Categories',
+  'nav.search': 'Search',
   'nav.settings': 'Settings',
+  'search.placeholder': 'Apps, categories and more',
+  'search.discover': 'Discover',
+  'search.noResults': 'No results',
+  'search.noResultsHelp': 'Nothing on the store matches “{query}”.',
+  'category.notFound': 'That category is not on the store.',
+  'category.empty': 'Nothing here yet',
+  'category.emptyHelp': 'No app has been published in this category yet.',
   'settings.title': 'Settings',
   'settings.signedOut': 'You are browsing signed out. Sign in to review an app.',
   'settings.signIn': 'Sign in',
@@ -76,7 +113,12 @@ const locales: Record<string, Messages> = { en };
 
 interface I18nValue {
   locale: string;
-  /** `t('a.b', { count: 3 })` substitutes `{count}`. No pluralization: add i18next when a language needs it. */
+  /**
+   * `t('a.b', { count: 3 })` substitutes `{count}`. A key with a `.one` form
+   * takes it for a count of exactly one — the numeric `count`, or `plural`
+   * when `count` is passed already formatted ("1,284"). English needs no more;
+   * add i18next when a language does.
+   */
   t: (key: string, params?: Record<string, string | number>) => string;
 }
 
@@ -91,7 +133,13 @@ export function LocaleProvider({ children }: { children: ReactNode }) {
     return {
       locale: full,
       t: (key, params) => {
-        const message = messages[key] ?? key;
+        const n =
+          typeof params?.plural === 'number'
+            ? params.plural
+            : typeof params?.count === 'number'
+              ? params.count
+              : undefined;
+        const message = (n === 1 ? messages[`${key}.one`] : undefined) ?? messages[key] ?? key;
         if (!params) return message;
         return message.replace(/\{(\w+)\}/g, (whole, name) =>
           name in params ? String(params[name]) : whole,

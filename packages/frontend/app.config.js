@@ -60,16 +60,11 @@ module.exports = {
         },
       ],
       // Shared Oxy native config: the iOS keychain group, expo-build-properties
-      // defaults, and withOxySharedPermissions (Atlas runs on its own Android
-      // UID and reaches the Commons/Accounts providers over signature IPC).
+      // defaults, the R8 -optimize ProGuard file, and withOxySharedPermissions
+      // (Atlas runs on its own Android UID and reaches the Commons/Accounts
+      // providers over signature IPC), which also release-signs with the ONE
+      // Oxy ecosystem key and fails a release build that is not signed with it.
       ['@oxy.so/app-preset', {}],
-      // Release-signs with the ONE Oxy ecosystem key (OXY_UPLOAD_* Gradle
-      // properties) and swaps in the optimising ProGuard file. The preset above
-      // does not apply it, and without it a local release build is debug-signed,
-      // which Commons' signature-level permissions refuse. Falls back to debug
-      // signing when the properties are absent, so verify the shipped
-      // certificate (`apksigner verify --print-certs`).
-      '@oxy.so/app-preset/plugin/withOxyAndroidRelease',
     ],
     extra: {
       router: {},

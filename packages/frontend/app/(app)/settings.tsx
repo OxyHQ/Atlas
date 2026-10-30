@@ -1,18 +1,18 @@
-import { Linking, ScrollView, Text, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Stack, useRouter } from 'expo-router';
+import { Linking, Text, View } from 'react-native';
+import { useRouter } from 'expo-router';
 import { Avatar } from '@oxy.so/bloom/avatar';
 import { Button } from '@oxy.so/bloom/button';
-import { SettingsListGroup, SettingsListItem } from '@oxy.so/bloom/settings-list';
+import { GroupedSection, GroupedSectionItem } from '@oxy.so/bloom/grouped-section';
 import { useBloomTheme } from '@oxy.so/bloom/theme';
 import { useAuth } from '@oxy.so/services/ui/client';
 import { getNormalizedUserHandle } from '@oxy.so/core';
+import { DetailPage } from '@/components/page';
 import { useTranslation } from '@/lib/i18n';
 
 /**
  * Settings.
  *
- * The rows are Bloom's `SettingsListGroup` / `SettingsListItem` — the same
+ * The rows are Bloom's `GroupedSection` / `GroupedSectionItem` — the same
  * components Mention's settings screen is built from — so the two look and
  * behave alike without either app owning a private copy. Anything that should
  * change here for every Oxy app changes in Bloom.
@@ -22,7 +22,6 @@ import { useTranslation } from '@/lib/i18n';
  */
 export default function SettingsScreen() {
   const { t } = useTranslation();
-  const insets = useSafeAreaInsets();
   const router = useRouter();
   const { user, isAuthenticated, signIn, signOut } = useAuth();
   const { mode, setMode } = useBloomTheme();
@@ -31,14 +30,10 @@ export default function SettingsScreen() {
   const displayName = user?.name?.displayName?.trim() || handle;
 
   return (
-    <>
-      <Stack.Screen options={{ headerShown: true, title: t('settings.title') }} />
-      <ScrollView
-        className="flex-1 bg-background"
-        contentContainerStyle={{ paddingVertical: 16, paddingBottom: insets.bottom + 32, gap: 8 }}
-      >
+    <DetailPage title={t('settings.title')}>
+      <View className="gap-2 px-4 py-4">
         {isAuthenticated ? (
-          <View className="flex-row items-center gap-4 px-6 py-4">
+          <View className="flex-row items-center gap-4 px-2 py-4">
             <Avatar source={user?.avatar} variant="thumb" size={56} name={displayName} />
             <View className="min-w-0 flex-1">
               <Text className="text-lg font-semibold text-foreground" numberOfLines={1}>
@@ -52,7 +47,7 @@ export default function SettingsScreen() {
             </View>
           </View>
         ) : (
-          <View className="gap-3 px-6 py-4">
+          <View className="gap-3 px-2 py-4">
             <Text className="text-base text-muted-foreground">{t('settings.signedOut')}</Text>
             <Button appearance="outline" tone="neutral" onPress={() => void signIn()}>
               {t('settings.signIn')}
@@ -60,8 +55,8 @@ export default function SettingsScreen() {
           </View>
         )}
 
-        <SettingsListGroup title={t('settings.appearance')}>
-          <SettingsListItem
+        <GroupedSection title={t('settings.appearance')}>
+          <GroupedSectionItem
             title={t('settings.theme')}
             description={t('settings.themeHelp')}
             value={t(`settings.theme.${mode}`)}
@@ -71,50 +66,50 @@ export default function SettingsScreen() {
               setMode(mode === 'light' ? 'dark' : mode === 'dark' ? 'system' : 'light')
             }
           />
-        </SettingsListGroup>
+        </GroupedSection>
 
-        <SettingsListGroup title={t('settings.store')}>
-          <SettingsListItem
+        <GroupedSection title={t('settings.store')}>
+          <GroupedSectionItem
             title={t('settings.browse')}
             showChevron
             onPress={() => router.replace('/')}
           />
-          <SettingsListItem
+          <GroupedSectionItem
             title={t('settings.publishYourApp')}
             description={t('settings.publishHelp')}
             showChevron
             onPress={() => Linking.openURL('https://console.oxy.so')}
           />
-        </SettingsListGroup>
+        </GroupedSection>
 
-        <SettingsListGroup title={t('settings.about')} footer={t('settings.aboutFooter')}>
-          <SettingsListItem
+        <GroupedSection title={t('settings.about')} footer={t('settings.aboutFooter')}>
+          <GroupedSectionItem
             title={t('settings.oxy')}
             showChevron
             onPress={() => Linking.openURL('https://oxy.so')}
           />
-          <SettingsListItem
+          <GroupedSectionItem
             title={t('settings.privacy')}
             showChevron
             onPress={() => Linking.openURL('https://oxy.so/privacy')}
           />
-          <SettingsListItem
+          <GroupedSectionItem
             title={t('settings.terms')}
             showChevron
             onPress={() => Linking.openURL('https://oxy.so/terms')}
           />
-        </SettingsListGroup>
+        </GroupedSection>
 
         {isAuthenticated ? (
-          <SettingsListGroup>
-            <SettingsListItem
+          <GroupedSection>
+            <GroupedSectionItem
               title={t('settings.signOut')}
               destructive
               onPress={() => void signOut()}
             />
-          </SettingsListGroup>
+          </GroupedSection>
         ) : null}
-      </ScrollView>
-    </>
+      </View>
+    </DetailPage>
   );
 }

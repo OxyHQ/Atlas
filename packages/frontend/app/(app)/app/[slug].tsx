@@ -1,272 +1,404 @@
-import { useState } from 'react';
-import { Image, Linking, Pressable, ScrollView, Text, View } from 'react-native';
-import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
-import { Avatar } from '@oxy.so/bloom/avatar';
+import { useMemo, useState } from 'react';
+import { Image, Linking, View } from 'react-native';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Button } from '@oxy.so/bloom/button';
+import { Card } from '@oxy.so/bloom/card';
+import { Divider } from '@oxy.so/bloom/divider';
+import { EmptyState } from '@oxy.so/bloom/empty-state';
+import { ExpandableText } from '@oxy.so/bloom/expandable-text';
+import { FactStrip, type FactStripItem } from '@oxy.so/bloom/fact-strip';
+import { GroupedSection, GroupedSectionItem } from '@oxy.so/bloom/grouped-section';
+import { RiGlobalLine } from '@oxy.so/bloom/icons/RiGlobalLine';
+import { RiStore2Line } from '@oxy.so/bloom/icons/RiStore2Line';
+import { ReviewCard } from '@oxy.so/bloom/listing-details';
+import { Lockup, LockupSkeleton } from '@oxy.so/bloom/lockup';
+import { Shelf } from '@oxy.so/bloom/media-shelf';
+import { Rating, RatingInput, RatingSummary } from '@oxy.so/bloom/rating';
+import {
+  SegmentedControl,
+  SegmentedControlItem,
+  SegmentedControlItemText,
+} from '@oxy.so/bloom/segmented-control';
+import * as Skeleton from '@oxy.so/bloom/skeleton';
+import { useTheme } from '@oxy.so/bloom/theme';
+import { Text } from '@oxy.so/bloom/typography';
 import { useAuth, useOxy } from '@oxy.so/services/ui/client';
+import { CategoryGlyph } from '@/components/navigation';
+import { DetailPage } from '@/components/page';
+import { AppShelf, GUTTER, SectionTitle } from '@/components/store';
 import { useTranslation } from '@/lib/i18n';
 import {
+  formatCount,
   formatRating,
   useDeleteMyStoreReview,
   useMyStoreReview,
   useStoreApp,
+  useStoreApps,
   useStoreReviews,
   useWriteStoreReview,
+  type StoreListingDetail,
   type StoreReview,
 } from '@/lib/store';
 
-const STARS = [1, 2, 3, 4, 5] as const;
+type Platform = StoreListingDetail['screenshots'][number]['platform'];
+
+/** The order the store's frames are offered in, and each frame's shape. */
+const PLATFORMS: readonly Platform[] = ['phone', 'tablet', 'desktop', 'web'];
+const FRAME: Record<Platform, { width: number; aspectRatio: number }> = {
+  phone: { width: 232, aspectRatio: 9 / 19.5 },
+  tablet: { width: 330, aspectRatio: 3 / 4 },
+  desktop: { width: 520, aspectRatio: 16 / 10 },
+  web: { width: 520, aspectRatio: 16 / 10 },
+};
 
 /**
- * An app's page, in the App Store's order: identity and the action first, then
- * a strip of facts, then the pictures, then the words, then the reviews.
+ * An app's page, in the App Store's order: the header (icon, name, line, the
+ * action), the facts strip, the screenshots, the description, Ratings & Reviews,
+ * Information, and more of the same kind.
  *
- * That order is the useful part. Somebody arriving from a link decides in the
- * first screenful, so nothing above the screenshots is optional.
+ * Every section rests on data the listing really has and is absent otherwise:
+ * no developer row (a listing names none), no size, age rating, version history
+ * or "What's New" (the store records none of them), and no rating at all for an
+ * app nobody has reviewed.
  */
 export default function AppPage() {
   const { slug } = useLocalSearchParams<{ slug: string }>();
   const { t } = useTranslation();
   const router = useRouter();
-
   const { data: app, isLoading, isError } = useStoreApp(slug);
-  const { data: reviews } = useStoreReviews(slug);
 
-  if (isLoading) return <AppPageSkeleton />;
-
-  if (isError || !app) {
+  if (isLoading) {
     return (
-      <View className="flex-1 items-center justify-center gap-3 px-6">
-        <Text className="text-base text-muted-foreground">{t('app.notFound')}</Text>
-        <Button appearance="plain" tone="accent" onPress={() => router.replace('/')}>
-          {t('app.backToStore')}
-        </Button>
-      </View>
+      <DetailPage>
+        <AppPageSkeleton />
+      </DetailPage>
     );
   }
 
-  const rating = formatRating(app.rating);
-  const primaryUrl = app.websiteUrl;
+  if (isError || !app) {
+    return (
+      <DetailPage>
+        <View className="px-5 py-16">
+          <EmptyState
+            icon={RiStore2Line}
+            title={t('app.notFound')}
+            action={{ label: t('app.backToStore'), onPress: () => router.replace('/') }}
+          />
+        </View>
+      </DetailPage>
+    );
+  }
 
   return (
-    <>
-      <Stack.Screen options={{ headerShown: true, title: app.name }} />
-      <ScrollView className="flex-1" contentContainerStyle={{ paddingBottom: 48 }}>
-        {/* Identity + action. */}
-        <View className="flex-row items-start gap-4 px-5 pt-6">
-          <Avatar source={app.icon} variant="full" size={110} shape="squircle" name={app.name} />
-          <View className="min-w-0 flex-1 gap-2 pt-1">
-            <View>
-              <Text className="text-[22px] font-bold leading-7 text-foreground" numberOfLines={2}>
-                {app.name}
-              </Text>
-              {app.tagline ? (
-                <Text
-                  className="mt-0.5 text-[13px] leading-[18px] text-muted-foreground"
-                  numberOfLines={2}
-                >
-                  {app.tagline}
-                </Text>
-              ) : null}
-            </View>
-            {primaryUrl ? (
-              <View className="flex-row">
-                <Button
-                  appearance="solid"
-                  tone="accent"
-                  size="sm"
-                  onPress={() => Linking.openURL(primaryUrl)}
-                >
-                  {t('app.open')}
-                </Button>
-              </View>
-            ) : null}
-          </View>
+    <DetailPage title={app.name}>
+      <View className="px-5 pt-2">
+        <Lockup
+          size="lg"
+          title={app.name}
+          subtitle={app.tagline}
+          icon={app.icon}
+          caption={app.category?.label}
+          action={
+            app.websiteUrl ? (
+              <Button
+                appearance="solid"
+                tone="accent"
+                accessibilityLabel={t('app.openApp', { name: app.name })}
+                onPress={() => {
+                  if (app.websiteUrl) void Linking.openURL(app.websiteUrl);
+                }}
+              >
+                {t('app.open')}
+              </Button>
+            ) : undefined
+          }
+          testID="app-header"
+        />
+      </View>
+
+      <View className="px-5 pt-5">
+        <Facts app={app} />
+      </View>
+
+      {app.screenshots.length > 0 ? <Screenshots screenshots={app.screenshots} /> : null}
+
+      {app.description ? (
+        <View className="px-5 pt-6">
+          <ExpandableText toggle="inline" numberOfLines={4} testID="app-description">
+            {app.description}
+          </ExpandableText>
         </View>
+      ) : null}
 
-        {/* The facts strip: what the App Store puts under the icon, in the same
-            scrolling row so it never wraps into a ragged block. */}
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={{ paddingHorizontal: 20, gap: 28, paddingVertical: 20 }}
-        >
-          <Fact
-            label={t('app.reviewCount', { count: app.rating.count })}
-            value={rating ?? '—'}
-            caption={rating ? '★★★★★' : t('app.noReviewsYet')}
-          />
-          {app.category ? (
-            <Fact label={t('app.category')} value={app.category.label} caption={t('store.title')} />
-          ) : null}
-          <Fact label={t('app.developer')} value="Oxy" caption={t('app.developerCaption')} />
-        </ScrollView>
+      <SectionDivider />
+      <RatingsAndReviews app={app} />
 
-        {app.screenshots.length > 0 ? <Screenshots app={app} /> : null}
+      <SectionDivider />
+      <Information app={app} />
 
-        {app.description ? (
-          <View className="gap-2 px-5 pt-2">
-            <Text className="text-[20px] font-bold tracking-[-0.2px] text-foreground">
-              {t('app.about')}
-            </Text>
-            <Text className="text-[15px] leading-[21px] text-foreground">{app.description}</Text>
-          </View>
-        ) : null}
-
-        <RatingsSummary app={app} />
-
-        <View className="gap-3 px-5 pt-4">
-          {(reviews?.items.length ?? 0) === 0 ? (
-            <Text className="text-[15px] text-muted-foreground">{t('app.beFirst')}</Text>
-          ) : (
-            reviews!.items.map((review) => <ReviewCard key={review.id} review={review} />)
-          )}
-        </View>
-
-        <View className="px-5 pt-5">
-          <WriteReview slug={slug} />
-        </View>
-
-        <View className="gap-1 px-5 pt-8">
-          <LinkRow label={t('app.support')} url={app.supportUrl} />
-          <LinkRow label={t('app.privacy')} url={app.privacyPolicyUrl} />
-          <LinkRow label={t('app.terms')} url={app.termsUrl} />
-        </View>
-      </ScrollView>
-    </>
+      {app.category ? <MoreLikeThis slug={app.slug} category={app.category.slug} /> : null}
+    </DetailPage>
   );
 }
 
-/** One column of the facts strip: a small label, a big value, a caption. */
-function Fact({ label, value, caption }: { label: string; value: string; caption: string }) {
+function SectionDivider() {
   return (
-    <View className="gap-1">
-      <Text className="text-[11px] font-semibold uppercase tracking-[0.6px] text-muted-foreground">
-        {label}
-      </Text>
-      <Text className="text-[19px] font-bold text-foreground" numberOfLines={1}>
-        {value}
-      </Text>
-      <Text className="text-[10px] text-muted-foreground" numberOfLines={1}>
-        {caption}
-      </Text>
+    <View className="px-5 pt-8">
+      <Divider />
     </View>
   );
 }
 
-/**
- * The screenshots, as a horizontal run of tall cards.
- *
- * `getFileDownloadUrl` is the one place a file id becomes a URL — the same
- * chokepoint Bloom's `ImageResolver` calls for avatars. A screenshot is not an
- * avatar, so it uses the function directly rather than being forced through a
- * component built for round images.
- */
-function Screenshots({
-  app,
-}: {
-  app: { screenshots: { id: string; fileId: string; caption: string | null }[] };
-}) {
-  const { oxyServices } = useOxy();
+/** The month and year a listing was published, in the reader's language. */
+function formatMonthYear(iso: string, locale: string): { year: string; month: string } | null {
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return null;
+  return {
+    year: new Intl.DateTimeFormat(locale, { year: 'numeric' }).format(date),
+    month: new Intl.DateTimeFormat(locale, { month: 'long' }).format(date),
+  };
+}
 
-  return (
-    <ScrollView
-      horizontal
-      showsHorizontalScrollIndicator={false}
-      contentContainerStyle={{ paddingHorizontal: 20, gap: 12, paddingBottom: 8 }}
-    >
-      {app.screenshots.map((shot) => (
-        <View key={shot.id} className="gap-1.5">
-          <Image
-            source={{ uri: oxyServices.assets.publicUrl(shot.fileId, 'full') }}
-            accessibilityLabel={shot.caption ?? undefined}
-            resizeMode="cover"
-            className="h-[420px] w-[236px] rounded-2xl bg-card"
-          />
-          {shot.caption ? (
-            <Text className="w-[236px] text-[12px] text-muted-foreground" numberOfLines={1}>
-              {shot.caption}
-            </Text>
-          ) : null}
-        </View>
-      ))}
-    </ScrollView>
-  );
+/** A website's host, the part a reader recognises. */
+function hostOf(url: string): string {
+  try {
+    return new URL(url).host.replace(/^www\./, '');
+  } catch {
+    return url;
+  }
 }
 
 /**
- * The ratings block: the average, then a bar per star.
- *
- * The histogram is `ratingBreakdown`, which the API computes from the visible
- * reviews on every read — so a hidden review leaves the bars immediately rather
- * than when some counter is repaired. Absent keys are zero.
+ * The facts under the header: the rating, the category, when it was published
+ * and where it lives on the web — each only when the listing has it.
  */
-function RatingsSummary({
-  app,
-}: {
-  app: {
-    rating: { average: number | null; count: number };
-    ratingBreakdown: Record<number, number>;
-  };
-}) {
+function Facts({ app }: { app: StoreListingDetail }) {
+  const { t, locale } = useTranslation();
+  const router = useRouter();
+  const { colors } = useTheme();
+  const rating = formatRating(app.rating);
+  const released = app.publishedAt ? formatMonthYear(app.publishedAt, locale) : null;
+  const category = app.category;
+  const website = app.websiteUrl;
+
+  const items = useMemo(() => {
+    const facts: FactStripItem[] = [
+      rating && app.rating.average !== null
+        ? {
+            key: 'ratings',
+            label: t('app.reviewCount', {
+              count: formatCount(app.rating.count, locale),
+              plural: app.rating.count,
+            }),
+            value: rating,
+            caption: (
+              <Rating
+                value={app.rating.average}
+                variant="stars"
+                showValue={false}
+                starSize={11}
+                size="sm"
+              />
+            ),
+            accessibilityLabel: t('app.ratedFact', {
+              rating,
+              count: formatCount(app.rating.count, locale),
+              plural: app.rating.count,
+            }),
+          }
+        : {
+            key: 'ratings',
+            label: t('app.ratings'),
+            value: '—',
+            caption: t('app.noReviewsYet'),
+            accessibilityLabel: t('app.noReviewsYet'),
+          },
+    ];
+    if (category) {
+      facts.push({
+        key: 'category',
+        label: t('app.category'),
+        value: <CategoryGlyph slug={category.slug} size={24} color={colors.textSecondary} />,
+        caption: category.label,
+        accessibilityLabel: t('app.categoryFact', { category: category.label }),
+        onPress: () =>
+          router.push({ pathname: '/category/[slug]', params: { slug: category.slug } }),
+      });
+    }
+    if (released) {
+      facts.push({
+        key: 'released',
+        label: t('app.released'),
+        value: released.year,
+        caption: released.month,
+      });
+    }
+    if (website) {
+      facts.push({
+        key: 'website',
+        label: t('app.website'),
+        value: <RiGlobalLine width={24} height={24} fill={colors.textSecondary} />,
+        caption: hostOf(website),
+        accessibilityLabel: t('app.websiteFact', { host: hostOf(website) }),
+        onPress: () => void Linking.openURL(website),
+      });
+    }
+    return facts;
+  }, [app.rating, rating, category, released, website, colors.textSecondary, router, t, locale]);
+
+  return <FactStrip items={items} contentInset={GUTTER} accessibilityLabel={t('app.facts')} />;
+}
+
+/**
+ * The screenshots, a frame at a time: the App Store's "Preview". When the
+ * listing has pictures from more than one kind of device, a segmented control
+ * picks which, as the store does with its device row.
+ *
+ * Each picture is the listing's file id turned into a URL by the SDK's one
+ * chokepoint (`assets.publicUrl`); a screenshot is not an avatar, so it does not
+ * go through `Avatar`.
+ */
+function Screenshots({ screenshots }: { screenshots: StoreListingDetail['screenshots'] }) {
   const { t } = useTranslation();
-  const average = formatRating(app.rating);
-  const total = app.rating.count;
+  const { oxyServices } = useOxy();
+  const { colors } = useTheme();
+  const platforms = PLATFORMS.filter((platform) =>
+    screenshots.some((shot) => shot.platform === platform),
+  );
+  const [chosen, setChosen] = useState<Platform | null>(null);
+  const platform = chosen && platforms.includes(chosen) ? chosen : (platforms[0] ?? 'phone');
+  const frame = FRAME[platform];
+  const shots = screenshots
+    .filter((shot) => shot.platform === platform)
+    .sort((a, b) => a.position - b.position);
 
   return (
     <View className="gap-3 px-5 pt-8">
-      <Text className="text-[20px] font-bold tracking-[-0.2px] text-foreground">
-        {t('app.reviews')}
-      </Text>
-
-      {total === 0 ? (
-        <Text className="text-[15px] text-muted-foreground">{t('app.noReviewsYet')}</Text>
-      ) : (
-        <View className="flex-row items-end gap-6">
-          <View>
-            <Text className="text-[54px] font-bold leading-[58px] text-foreground">{average}</Text>
-            <Text className="text-[12px] text-muted-foreground">{t('app.outOfFive')}</Text>
-          </View>
-
-          <View className="flex-1 gap-1 pb-1">
-            {[5, 4, 3, 2, 1].map((star) => {
-              const count = app.ratingBreakdown[star] ?? 0;
-              return (
-                <View key={star} className="flex-row items-center gap-2">
-                  <Text className="w-8 text-[11px] text-muted-foreground">
-                    {'★'.repeat(1)}
-                    {star}
-                  </Text>
-                  <View className="h-1.5 flex-1 overflow-hidden rounded-full bg-card">
-                    <View
-                      className="h-full rounded-full bg-foreground/60"
-                      style={{ width: `${total === 0 ? 0 : Math.round((count / total) * 100)}%` }}
-                    />
-                  </View>
-                </View>
-              );
-            })}
-            <Text className="pt-1 text-right text-[12px] text-muted-foreground">
-              {t('app.reviewCount', { count: total })}
-            </Text>
-          </View>
+      <Shelf title={t('app.preview')} itemWidth={frame.width} gap={12} contentInset={GUTTER}>
+        {shots.map((shot, index) => (
+          <Image
+            key={shot.id}
+            source={{ uri: oxyServices.assets.publicUrl(shot.fileId, 'full') }}
+            accessibilityLabel={
+              shot.caption ?? t('app.screenshotLabel', { index: index + 1, count: shots.length })
+            }
+            resizeMode="cover"
+            style={{
+              width: frame.width,
+              aspectRatio: frame.aspectRatio,
+              borderRadius: platform === 'phone' ? 24 : 12,
+              borderWidth: 1,
+              borderColor: colors.border,
+              backgroundColor: colors.backgroundSecondary,
+            }}
+          />
+        ))}
+      </Shelf>
+      {platforms.length > 1 ? (
+        <View className="flex-row">
+          <SegmentedControl
+            label={t('app.screenshotsFor')}
+            type="radio"
+            value={platform}
+            onValueChange={(value) => setChosen(value)}
+          >
+            {platforms.map((option) => (
+              <SegmentedControlItem key={option} value={option}>
+                <SegmentedControlItemText>{t(`platform.${option}`)}</SegmentedControlItemText>
+              </SegmentedControlItem>
+            ))}
+          </SegmentedControl>
         </View>
-      )}
+      ) : null}
     </View>
   );
 }
 
-function LinkRow({ label, url }: { label: string; url: string | null }) {
-  if (!url) return null;
+/**
+ * Ratings & Reviews: the summary, the reviews as cards, and the reader's own.
+ *
+ * The summary and its bars are the API's numbers, computed from the visible
+ * reviews on every read; an app nobody has reviewed shows "No ratings yet" and
+ * no bars, never a zero.
+ */
+function RatingsAndReviews({ app }: { app: StoreListingDetail }) {
+  const { t } = useTranslation();
+  const { data: reviews } = useStoreReviews(app.slug);
+  const items = reviews?.items ?? [];
+
   return (
-    <Pressable
-      accessibilityRole="link"
-      onPress={() => Linking.openURL(url)}
-      className="flex-row items-center justify-between border-b border-border/50 py-3 active:opacity-70"
-    >
-      <Text className="text-[15px] text-foreground">{label}</Text>
-      <Text className="text-[15px] text-muted-foreground">›</Text>
-    </Pressable>
+    <View className="pt-8">
+      <View className="px-5">
+        <SectionTitle>{t('app.ratingsAndReviews')}</SectionTitle>
+        <RatingSummary
+          average={app.rating.average}
+          count={app.rating.count}
+          distribution={app.ratingBreakdown}
+          // The distribution is read at a glance; across a wide panel its bars
+          // would stretch into lines nobody compares.
+          style={{ maxWidth: 520 }}
+          testID="app-ratings"
+        />
+      </View>
+
+      {items.length > 0 ? (
+        <View className="px-5 pt-6">
+          <Shelf
+            title={t('app.reviews')}
+            layout="paged"
+            minItemWidth={320}
+            peek={24}
+            gap={GUTTER}
+            contentInset={GUTTER}
+          >
+            {items.map((review) => (
+              <ReviewTile key={review.id} review={review} />
+            ))}
+          </Shelf>
+        </View>
+      ) : null}
+
+      <View className="px-5 pt-6">
+        <WriteReview slug={app.slug} />
+      </View>
+    </View>
+  );
+}
+
+/** One review, as Bloom's `ReviewCard` on a card of its own. */
+function ReviewTile({ review }: { review: StoreReview }) {
+  const { t, locale } = useTranslation();
+  const author = review.author.username ?? t('app.someone');
+  const date = new Intl.DateTimeFormat(locale, { dateStyle: 'medium' }).format(
+    new Date(review.createdAt),
+  );
+  return (
+    <Card radius="radius-20" style={{ flex: 1 }}>
+      <View style={{ padding: GUTTER }}>
+        <ReviewCard
+          name={author}
+          // Only ever said when true. It is false for a first-party app nobody
+          // consents to, so its absence must not read as a demotion.
+          subtitle={review.authorUsesApp ? t('app.usesThisApp') : undefined}
+          rating={review.rating}
+          date={date}
+          heading={review.title ?? undefined}
+          text={review.body ?? ''}
+          numberOfLines={5}
+          hostResponse={
+            review.reply
+              ? {
+                  title: t('app.developerReply'),
+                  date: new Intl.DateTimeFormat(locale, { dateStyle: 'medium' }).format(
+                    new Date(review.reply.createdAt),
+                  ),
+                  text: review.reply.body,
+                }
+              : undefined
+          }
+        />
+      </View>
+    </Card>
   );
 }
 
@@ -277,112 +409,126 @@ function LinkRow({ label, url }: { label: string; url: string | null }) {
  */
 function WriteReview({ slug }: { slug: string }) {
   const { t } = useTranslation();
+  const { colors } = useTheme();
   const { user, canUsePrivateApi, signIn } = useAuth();
   const { data: mine } = useMyStoreReview(slug);
   const write = useWriteStoreReview(slug);
   const remove = useDeleteMyStoreReview(slug);
 
   const [selection, setSelection] = useState<{ accountId: string; rating: number } | null>(null);
-  const chosen = (selection?.accountId === user?.id ? selection?.rating : 0) || mine?.rating || 0;
+  const chosen =
+    (selection?.accountId === user?.id ? selection?.rating : undefined) ?? mine?.rating ?? null;
 
   if (!canUsePrivateApi || !user) {
     return (
-      <Button appearance="outline" tone="neutral" onPress={() => void signIn()}>
-        {t('app.signInToReview')}
-      </Button>
+      <View className="flex-row">
+        <Button appearance="subtle" tone="accent" onPress={() => void signIn()}>
+          {t('app.signInToReview')}
+        </Button>
+      </View>
     );
   }
 
   return (
-    <View className="gap-3 rounded-2xl bg-card p-5">
-      <Text className="text-[15px] font-semibold text-foreground">
-        {mine ? t('app.yourReview') : t('app.rateIt')}
+    <View className="flex-row flex-wrap items-center gap-x-4 gap-y-2">
+      <Text variant="body-medium" style={{ color: colors.textSecondary }}>
+        {mine ? t('app.yourRating') : t('app.tapToRate')}
       </Text>
-
-      <View className="flex-row gap-1">
-        {STARS.map((star) => (
-          <Pressable
-            key={star}
-            accessibilityRole="button"
-            accessibilityLabel={t('app.starLabel', { count: star })}
-            disabled={write.isPending}
-            onPress={() => {
-              setSelection({ accountId: user.id, rating: star });
-              write.mutate({ rating: star, body: mine?.body ?? null });
-            }}
-            className="px-1 active:opacity-60"
-          >
-            <Text className={star <= chosen ? 'text-3xl text-foreground' : 'text-3xl opacity-25'}>
-              ★
-            </Text>
-          </Pressable>
-        ))}
-      </View>
-
+      <RatingInput
+        value={chosen}
+        disabled={write.isPending}
+        accessibilityLabel={t('app.rateIt')}
+        onChange={(rating) => {
+          setSelection({ accountId: user.id, rating });
+          write.mutate({ rating, title: mine?.title ?? null, body: mine?.body ?? null });
+        }}
+      />
       {mine ? (
-        <View className="flex-row">
-          <Button
-            appearance="plain"
-            tone="accent"
-            size="sm"
-            loading={remove.isPending}
-            onPress={() => remove.mutate()}
-          >
-            {t('app.withdrawReview')}
-          </Button>
-        </View>
+        <Button
+          appearance="plain"
+          tone="accent"
+          size="sm"
+          loading={remove.isPending}
+          onPress={() => remove.mutate()}
+        >
+          {t('app.withdrawReview')}
+        </Button>
       ) : null}
     </View>
   );
 }
 
-function ReviewCard({ review }: { review: StoreReview }) {
-  const { t } = useTranslation();
+/**
+ * Information: the App Store's table of plain facts, from what the listing has —
+ * its category, when it was published, and the application's own links.
+ */
+function Information({ app }: { app: StoreListingDetail }) {
+  const { t, locale } = useTranslation();
+  const router = useRouter();
+  const published = app.publishedAt ? new Date(app.publishedAt) : null;
+  const links: { key: string; title: string; url: string }[] = [
+    app.websiteUrl ? { key: 'website', title: t('app.website'), url: app.websiteUrl } : null,
+    app.supportUrl ? { key: 'support', title: t('app.support'), url: app.supportUrl } : null,
+    app.supportEmail
+      ? { key: 'email', title: t('app.supportEmail'), url: `mailto:${app.supportEmail}` }
+      : null,
+    app.privacyPolicyUrl
+      ? { key: 'privacy', title: t('app.privacy'), url: app.privacyPolicyUrl }
+      : null,
+    app.termsUrl ? { key: 'terms', title: t('app.terms'), url: app.termsUrl } : null,
+  ].filter((link): link is { key: string; title: string; url: string } => link !== null);
+  const category = app.category;
 
   return (
-    <View className="gap-1.5 border-b border-border/50 pb-3">
-      <View className="flex-row items-center justify-between">
-        <Text className="text-[13px] text-foreground">{'★'.repeat(review.rating)}</Text>
-        <Text className="text-[12px] text-muted-foreground">
-          {review.author.username ? `@${review.author.username}` : t('app.someone')}
-          {/* Only ever shown when true. It is false for a first-party app nobody
-              consents to, so its absence must not read as a demotion. */}
-          {review.authorUsesApp ? ` · ${t('app.usesThisApp')}` : ''}
-        </Text>
-      </View>
-
-      {review.title ? (
-        <Text className="text-[15px] font-semibold text-foreground">{review.title}</Text>
-      ) : null}
-      {review.body ? (
-        <Text className="text-[14px] leading-[19px] text-foreground">{review.body}</Text>
-      ) : null}
-
-      {review.reply ? (
-        <View className="mt-1 gap-1 rounded-xl bg-card p-3">
-          <Text className="text-[11px] font-semibold uppercase tracking-[0.5px] text-muted-foreground">
-            {t('app.developerReply')}
-          </Text>
-          <Text className="text-[14px] leading-[19px] text-foreground">{review.reply.body}</Text>
-        </View>
-      ) : null}
+    <View className="gap-4 px-5 pt-8">
+      <SectionTitle>{t('app.information')}</SectionTitle>
+      <GroupedSection>
+        {category ? (
+          <GroupedSectionItem
+            title={t('app.category')}
+            value={category.label}
+            onPress={() =>
+              router.push({ pathname: '/category/[slug]', params: { slug: category.slug } })
+            }
+          />
+        ) : null}
+        {published && !Number.isNaN(published.getTime()) ? (
+          <GroupedSectionItem
+            title={t('app.released')}
+            value={new Intl.DateTimeFormat(locale, { dateStyle: 'long' }).format(published)}
+          />
+        ) : null}
+        {links.map((link) => (
+          <GroupedSectionItem
+            key={link.key}
+            title={link.title}
+            onPress={() => void Linking.openURL(link.url)}
+          />
+        ))}
+      </GroupedSection>
     </View>
   );
+}
+
+/** "You Might Also Like": the rest of the app's category. */
+function MoreLikeThis({ slug, category }: { slug: string; category: string }) {
+  const { t } = useTranslation();
+  const { data } = useStoreApps(category);
+  const others = (data?.items ?? []).filter((item) => item.slug !== slug);
+  if (others.length === 0) return null;
+  return <AppShelf title={t('app.mightAlsoLike')} apps={others} rows={1} />;
 }
 
 /** The page's own shape while it loads, so nothing jumps when the data lands. */
 function AppPageSkeleton() {
   return (
-    <View className="flex-1 px-5 pt-6">
-      <View className="flex-row items-start gap-4">
-        <View className="h-[110px] w-[110px] rounded-[26px] bg-card" />
-        <View className="flex-1 gap-2 pt-2">
-          <View className="h-6 w-2/3 rounded-full bg-card" />
-          <View className="h-4 w-full rounded-full bg-card" />
-          <View className="mt-1 h-8 w-24 rounded-full bg-card" />
-        </View>
+    <View className="gap-6 px-5 pt-2">
+      <LockupSkeleton size="lg" />
+      <Skeleton.Box width="100%" height={72} borderRadius={12} />
+      <View className="flex-row gap-3">
+        <Skeleton.Box width={232} height={502} borderRadius={24} />
+        <Skeleton.Box width={232} height={502} borderRadius={24} />
       </View>
-      <View className="mt-8 h-[420px] w-[236px] rounded-2xl bg-card" />
     </View>
   );
 }

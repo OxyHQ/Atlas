@@ -10,7 +10,9 @@ import { StatusBar } from 'expo-status-bar';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { OxyProvider, useAccountColor, useOxy } from '@oxy.so/services/ui/client';
-import { BloomThemeProvider } from '@oxy.so/bloom/theme';
+import { BloomProvider } from '@oxy.so/bloom/provider';
+import { useBackWithFallback } from '@oxy.so/bloom/panel-routing/expo-router';
+import { expoRouterScrollAdapter } from '@oxy.so/bloom/scroll/expo-router';
 import { ImageResolverProvider } from '@oxy.so/bloom/image-resolver';
 import { ConnectionStatusToasts } from '@oxy.so/bloom/connection-status';
 import { OverlayInertBoundary, PortalOutlet, PortalProvider } from '@oxy.so/bloom/portal';
@@ -30,17 +32,26 @@ export function ErrorBoundary(props: { error: Error; retry: () => void }) {
 }
 
 export default function RootLayout() {
+  // Every route screen's Back, configured once: back through the history, or to
+  // the storefront when a deep link left none.
+  const back = useBackWithFallback('/');
+
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       {/* No KeyboardProvider here: OxyProvider mounts the one. A second one above it
           took the native keyboard events, so every keyboard hook under OxyProvider read
           a closed keyboard. */}
       <SafeAreaProvider>
-        {/* BloomThemeProvider is the outermost theming authority — it must wrap
-            every render branch, including any pre-auth backdrop. OxyProvider is
-            the single session authority (web + native); it owns the QueryClient
-            and never redirects to an external login. */}
-        <BloomThemeProvider persistKey={THEME_PERSIST_KEY} storage={themeStorage}>
+        {/* BloomProvider is the one Bloom root — theme, scroll restoration and
+            route Back — and wraps every render branch. OxyProvider is the single
+            session authority (web + native); it owns the QueryClient and never
+            redirects to an external login. */}
+        <BloomProvider
+          persistKey={THEME_PERSIST_KEY}
+          storage={themeStorage}
+          scrollAdapter={expoRouterScrollAdapter}
+          back={back}
+        >
           <ConnectionStatusToasts />
           <OxyProvider
             baseURL={API_URL}
@@ -64,7 +75,7 @@ export default function RootLayout() {
               </LocaleProvider>
             </AppImageResolver>
           </OxyProvider>
-        </BloomThemeProvider>
+        </BloomProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>
   );
@@ -72,7 +83,7 @@ export default function RootLayout() {
 
 /**
  * Wears the signed-in account's colour. Mounted once, below both OxyProvider
- * (the session) and BloomThemeProvider (the theme it is applied to).
+ * (the session) and BloomProvider (the theme it is applied to).
  */
 function AccountColor() {
   useAccountColor();

@@ -10,16 +10,6 @@
    `bg-background` / `text-foreground` emit at build time. BloomThemeProvider
    writes the real var values to the document at runtime. */
 @theme {
-  /* Layout breakpoints, as CSS. The whole point is that the browser resolves
-     these — a JS `useWindowDimensions` read re-renders the tree on every resize
-     frame and feels sluggish, while a media query costs nothing.
-
-     `rail` is 500px because that is where Bloom's ContentPanel switches from
-     full-bleed to framed (`framedFrom={500}`), so the rail and the frame appear
-     on the same tick instead of one popping in before the other. */
-  --breakpoint-rail: 500px;
-  --breakpoint-wide: 990px;
-
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
@@ -49,4 +39,20 @@
     --input: #e4e4e9;
     --border: #e4e4e9;
   }
+}
+
+/* The document is the scroll owner (Bloom's AppShell, `scroll="page"`, routes
+   are `Screen scroll="auto"`). Expo's react-native-web reset sets
+   `body { overflow: hidden }` for ScrollView-owned apps; this undoes it, as
+   Bloom's "Compose application layouts" asks of a web host: height 100% through
+   html, body and the root (never 100vh, which counts a classic scrollbar), and
+   both axes visible (one axis alone promotes the other to a second scroller).
+   The selectors outrank the reset's (`html body` over `body`, `body #root` over
+   `#root`) wherever the two stylesheets land in the document. */
+html:root,
+html body,
+html body #root {
+  height: 100%;
+  min-height: 100%;
+  overflow: visible;
 }
