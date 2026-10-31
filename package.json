@@ -15,11 +15,15 @@
     "test:worker": "bun test scripts/worker.test.ts",
     "lint:fix": "biome check --write .",
     "format": "biome format --write .",
-    "test:store": "bun test scripts/store-session.test.tsx && bun test scripts/write-review.test.tsx && bun test scripts/review-account-ownership.test.ts && bun test scripts/review-sdk-subject.test.ts"
+    "test:store": "bun test scripts/store-session.test.tsx && bun test scripts/write-review.test.tsx && bun test scripts/review-account-ownership.test.ts && bun test scripts/review-sdk-subject.test.ts && bun test scripts/store-compiler.test.tsx"
   },
   "devDependencies": {
+    "@babel/core": "7.29.7",
+    "@babel/plugin-transform-react-jsx": "7.29.7",
+    "@babel/plugin-transform-typescript": "7.29.7",
     "@biomejs/biome": "2.5.15",
     "@types/react-test-renderer": "19.1.0",
+    "babel-plugin-react-compiler": "1.0.0",
     "react-test-renderer": "19.3.0"
   },
   "overrides": {
