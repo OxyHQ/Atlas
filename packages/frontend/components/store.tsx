@@ -11,6 +11,7 @@ import { Shelf, ShelfSkeleton } from '@oxy.so/bloom/media-shelf';
 import { Rating } from '@oxy.so/bloom/rating';
 import { useTheme } from '@oxy.so/bloom/theme';
 import { Text } from '@oxy.so/bloom/typography';
+import { InstallAction } from '@/components/install-action';
 import { useTranslation } from '@/lib/i18n';
 import { formatCount, type StoreListingSummary } from '@/lib/store';
 
@@ -34,12 +35,13 @@ export function useOpenApp(): (slug: string) => void {
 }
 
 /**
- * The lockup's action.
+ * The lockup's action where nothing installs applications.
  *
- * Atlas installs nothing, so there is no "Get": the pill opens the app's page,
- * which is where "Open" (its website) lives. Its name says which app, because a
- * column of buttons all called "View" is a list of identical controls to a
- * screen reader.
+ * There Atlas installs nothing, so there is no "Get": the pill opens the app's
+ * page, which is where "Open" (its website) lives. Its name says which app,
+ * because a column of buttons all called "View" is a list of identical controls
+ * to a screen reader. Where the machine installs applications, the lockup's
+ * action is `InstallAction` instead, with this as what it falls back to.
  */
 function ViewButton({ item }: { item: StoreListingSummary }) {
   const { t } = useTranslation();
@@ -94,7 +96,14 @@ export function AppLockup({
       }
       href={`/app/${item.slug}`}
       onPress={() => open(item.slug)}
-      action={<ViewButton item={item} />}
+      action={
+        <InstallAction
+          slug={item.slug}
+          name={item.name}
+          size="sm"
+          fallback={<ViewButton item={item} />}
+        />
+      }
       testID={`lockup-${item.slug}`}
     />
   );
