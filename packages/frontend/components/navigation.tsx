@@ -8,6 +8,8 @@ import { RiBriefcase4Line } from '@oxy.so/bloom/icons/RiBriefcase4Line';
 import { RiChat3Line } from '@oxy.so/bloom/icons/RiChat3Line';
 import { RiCodeSSlashLine } from '@oxy.so/bloom/icons/RiCodeSSlashLine';
 import { RiCompass3Line } from '@oxy.so/bloom/icons/RiCompass3Line';
+import { RiDownload2Fill } from '@oxy.so/bloom/icons/RiDownload2Fill';
+import { RiDownload2Line } from '@oxy.so/bloom/icons/RiDownload2Line';
 import { RiGroupLine } from '@oxy.so/bloom/icons/RiGroupLine';
 import { RiHome4Line } from '@oxy.so/bloom/icons/RiHome4Line';
 import { RiLayoutGridLine } from '@oxy.so/bloom/icons/RiLayoutGridLine';
@@ -27,6 +29,7 @@ import { useTabPager } from '@oxy.so/bloom/tab-pager';
 import { TabPagerProvider } from '@oxy.so/bloom/tab-pager/expo-router';
 import { ProfileButton, type ProfileButtonProps } from '@oxy.so/services/ui/client';
 import { useTranslation } from '@/lib/i18n';
+import { useStoreInstaller } from '@/lib/installer';
 import { useStoreCategories } from '@/lib/store';
 
 /** One entry of the shared account menu, typed from the lean entry (never the root barrel). */
@@ -79,12 +82,15 @@ export function CategoryGlyph({
  * Categories and one row per store category follow the pages in the sidebar, as
  * the desktop store lists its catalogue there. They are places, not pages: on a
  * phone they are reached from the Apps page. Settings draws no row; it is the
- * account menu's entry. There is no Updates or Arcade: Atlas installs nothing
- * and sells nothing, and a row with no data behind it would be furniture.
+ * account menu's entry. Updates is a row only where the machine installs
+ * applications (its installer is registered), as the desktop store keeps it at
+ * the foot of its sidebar; anywhere else Atlas installs nothing, and a row with
+ * no data behind it would be furniture. There is no Arcade: Atlas sells nothing.
  */
 function useAtlasDestinations(): AppDestination[] {
   const { t } = useTranslation();
   const { data: categories } = useStoreCategories();
+  const installs = useStoreInstaller() !== null;
 
   return useMemo<AppDestination[]>(
     () => [
@@ -124,6 +130,17 @@ function useAtlasDestinations(): AppDestination[] {
         label: category.label,
         icon: categoryIcon(category.slug),
       })),
+      ...(installs
+        ? [
+            {
+              name: 'updates',
+              href: '/updates',
+              label: t('nav.updates'),
+              icon: RiDownload2Line,
+              activeIcon: RiDownload2Fill,
+            },
+          ]
+        : []),
       {
         name: 'settings',
         href: '/settings',
@@ -133,7 +150,7 @@ function useAtlasDestinations(): AppDestination[] {
         sidebar: false,
       },
     ],
-    [t, categories],
+    [t, categories, installs],
   );
 }
 
