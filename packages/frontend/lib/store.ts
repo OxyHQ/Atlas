@@ -1,5 +1,5 @@
-import { useMemo } from 'react';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useCallback, useLayoutEffect, useMemo, useRef, useSyncExternalStore } from 'react';
+import { useMutation, useQuery, useQueryClient, type MutateOptions } from '@tanstack/react-query';
 import { useAuth, useOxy } from '@oxy.so/services/ui/client';
 import type {
   StoreCategory,
@@ -9,6 +9,7 @@ import type {
   StoreReview,
   WriteStoreReviewInput,
 } from '@oxy.so/core';
+import { ATLAS_REVIEW_MUTATION_KEYS } from './reviewKeys';
 
 /**
  * Atlas reads the store through `@oxy.so/core`'s store mixin, never a hand-rolled
@@ -90,14 +91,16 @@ export function useMyStoreReview(slug: string) {
   const { user, canUsePrivateApi } = useAuth();
   const accountId = user?.id ?? null;
   const epoch = oxyServices.http.getSessionEpoch();
+  const sameSubject = accountId !== null && oxyServices.session.userId === accountId;
 
   return useQuery({
     queryKey: queryKeys.ownReview(slug, accountId),
     queryFn: () => {
-      if (epoch !== oxyServices.http.getSessionEpoch()) throw new Error('Account changed');
+      if (epoch !== oxyServices.http.getSessionEpoch() || oxyServices.session.userId !== accountId)
+        throw new Error('Account changed');
       return oxyServices.store.reviews.mine(slug);
     },
-    enabled: !!slug && canUsePrivateApi && !!accountId,
+    enabled: !!slug && canUsePrivateApi && sameSubject,
     staleTime: 1000 * 30,
   });
 }
@@ -109,51 +112,168 @@ export function useMyStoreReview(slug: string) {
  * visible reviews on every read, so a new review changes the number on the page
  * it was written from.
  */
-export function useWriteStoreReview(slug: string) {
-  const { oxyServices } = useOxy();
-  const { user, canUsePrivateApi } = useAuth();
-  const accountId = user?.id ?? null;
-  const epoch = oxyServices.http.getSessionEpoch();
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationKey: ['store-write-review', slug, accountId],
-    mutationFn: async (input: WriteStoreReviewInput) => {
-      if (!canUsePrivateApi || !accountId || epoch !== oxyServices.http.getSessionEpoch())
-        throw new Error('Account changed');
-      const review = await oxyServices.store.reviews.write(slug, input);
-      return { review, accountId };
-    },
-    onSuccess: ({ review, accountId: owner }) => {
-      queryClient.setQueryData(queryKeys.ownReview(slug, owner), review);
-      queryClient.invalidateQueries({ queryKey: ['store', 'reviews', slug] });
-      queryClient.invalidateQueries({ queryKey: queryKeys.app(slug) });
-    },
-  });
+export function useWriteStoreReview(slug: string, sharedAttempt?: { current: number }) {
+  return useOwnedReviewMutation<WriteStoreReviewInput, StoreOwnReview>(
+    slug,
+    'write',
+    sharedAttempt,
+  );
 }
 
 /** Withdraw the reader's own review. */
-export function useDeleteMyStoreReview(slug: string) {
+export function useDeleteMyStoreReview(slug: string, sharedAttempt?: { current: number }) {
+  return useOwnedReviewMutation<void, void>(slug, 'delete', sharedAttempt);
+}
+
+type ReviewOwner = {
+  slug: string;
+  accountId: string | null;
+  enabled: boolean;
+  epoch: number;
+  oxyServices: ReturnType<typeof useOxy>['oxyServices'];
+};
+type ReviewVariables<T> = { input: T };
+const reviewOwners = new WeakMap<object, ReviewOwner>();
+function sameReviewOwner(first: ReviewOwner | undefined, second: ReviewOwner | null): boolean {
+  return (
+    !!first?.accountId &&
+    first.enabled &&
+    !!second &&
+    second.enabled &&
+    first.oxyServices === second.oxyServices &&
+    first.accountId === second.accountId &&
+    first.slug === second.slug &&
+    first.epoch === second.epoch
+  );
+}
+
+/** Review mutations are memory-only and must never run under a replacement session. */
+function useOwnedReviewMutation<TInput, TResult>(
+  slug: string,
+  operation: 'write' | 'delete',
+  sharedAttempt?: { current: number },
+) {
   const { oxyServices } = useOxy();
   const { user, canUsePrivateApi } = useAuth();
   const accountId = user?.id ?? null;
-  const epoch = oxyServices.http.getSessionEpoch();
+  const http = oxyServices.http;
+  const subscribe = useCallback(
+    (notify: () => void) => http.addTokenChangeListener(notify),
+    [http],
+  );
+  const snapshot = useCallback(() => http.getSessionEpoch(), [http]);
+  const epoch = useSyncExternalStore(subscribe, snapshot, snapshot);
   const queryClient = useQueryClient();
+  const current = useRef<ReviewOwner | null>(null);
+  const ownAttempt = useRef(0);
+  const latestAttempt = sharedAttempt ?? ownAttempt;
+  const enabled =
+    canUsePrivateApi && accountId !== null && oxyServices.session.userId === accountId;
+  const owner = { slug, accountId, enabled, epoch, oxyServices };
+  useLayoutEffect(() => {
+    current.current = { slug, accountId, enabled, epoch, oxyServices };
+    return () => {
+      current.current = null;
+    };
+  }, [slug, accountId, enabled, epoch, oxyServices]);
 
-  return useMutation({
-    mutationKey: ['store-delete-review', slug, accountId],
-    mutationFn: async () => {
-      if (!canUsePrivateApi || !accountId || epoch !== oxyServices.http.getSessionEpoch())
-        throw new Error('Account changed');
-      await oxyServices.store.reviews.deleteMine(slug);
-      return { accountId };
+  const owns = (variables: ReviewVariables<TInput>) => {
+    const started = reviewOwners.get(variables);
+    const active = current.current;
+    return (
+      !!started &&
+      sameReviewOwner(started, active) &&
+      started.epoch === started.oxyServices.http.getSessionEpoch() &&
+      started.oxyServices.session.userId === started.accountId
+    );
+  };
+  const attempts = useRef(new WeakMap<object, number>());
+  const ownsLatest = (variables: ReviewVariables<TInput>) =>
+    owns(variables) && attempts.current.get(variables) === latestAttempt.current;
+  const mutation = useMutation<TResult, Error, ReviewVariables<TInput>>({
+    mutationKey: ATLAS_REVIEW_MUTATION_KEYS[operation],
+    networkMode: 'always',
+    retry: false,
+    mutationFn: async (variables) => {
+      const started = reviewOwners.get(variables);
+      if (!started || !owns(variables)) throw new Error('Account changed');
+      const result =
+        operation === 'write'
+          ? await started.oxyServices.store.reviews.write(
+              started.slug,
+              variables.input as WriteStoreReviewInput,
+            )
+          : await started.oxyServices.store.reviews.deleteMine(started.slug);
+      if (!owns(variables)) throw new Error('Account changed');
+      return result as TResult;
     },
-    onSuccess: ({ accountId: owner }) => {
-      queryClient.setQueryData(queryKeys.ownReview(slug, owner), null);
-      queryClient.invalidateQueries({ queryKey: ['store', 'reviews', slug] });
-      queryClient.invalidateQueries({ queryKey: queryKeys.app(slug) });
+    onSuccess: (result, variables) => {
+      const started = reviewOwners.get(variables);
+      if (!started || !ownsLatest(variables)) return;
+      queryClient.setQueryData(
+        queryKeys.ownReview(started.slug, started.accountId),
+        operation === 'write' ? result : null,
+      );
+      void queryClient.invalidateQueries({ queryKey: ['store', 'reviews', started.slug] });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.app(started.slug) });
     },
   });
+  const prepare = (input: TInput, options?: MutateOptions<TResult, Error, TInput>) => {
+    const variables = { input };
+    reviewOwners.set(variables, owner);
+    attempts.current.set(variables, ++latestAttempt.current);
+    const adapted: MutateOptions<TResult, Error, ReviewVariables<TInput>> | undefined = options && {
+      onSuccess: (data, vars, context, mutationContext) => {
+        if (ownsLatest(vars)) options.onSuccess?.(data, vars.input, context, mutationContext);
+      },
+      onError: (error, vars, context, mutationContext) => {
+        if (ownsLatest(vars)) options.onError?.(error, vars.input, context, mutationContext);
+      },
+      onSettled: (data, error, vars, context, mutationContext) => {
+        if (ownsLatest(vars))
+          options.onSettled?.(data, error, vars.input, context, mutationContext);
+      },
+    };
+    return { variables, adapted };
+  };
+  const visible =
+    !mutation.variables || sameReviewOwner(reviewOwners.get(mutation.variables), owner);
+  return {
+    ...mutation,
+    ...(!visible
+      ? {
+          data: undefined,
+          error: null,
+          failureCount: 0,
+          failureReason: null,
+          isError: false,
+          isIdle: true,
+          isPaused: false,
+          isPending: false,
+          isSuccess: false,
+          status: 'idle' as const,
+          submittedAt: 0,
+        }
+      : {}),
+    variables: visible ? mutation.variables?.input : undefined,
+    mutate: (input: TInput, options?: MutateOptions<TResult, Error, TInput>) => {
+      const { variables, adapted } = prepare(input, options);
+      mutation.mutate(variables, adapted);
+    },
+    mutateAsync: (input: TInput, options?: MutateOptions<TResult, Error, TInput>) => {
+      const { variables, adapted } = prepare(input, options);
+      return mutation.mutateAsync(variables, adapted).then(
+        (result) => {
+          if (!ownsLatest(variables)) throw new Error('Account changed');
+          return result;
+        },
+        (error: unknown) => {
+          if (!ownsLatest(variables)) throw new Error('Account changed');
+          throw error;
+        },
+      );
+    },
+  };
 }
 
 /**

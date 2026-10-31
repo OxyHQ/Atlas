@@ -1,5 +1,6 @@
 import { QueryClient } from '@tanstack/react-query';
 import type { AccountQueriesConfig } from '@oxy.so/services/ui';
+import { ATLAS_REVIEW_MUTATION_KEYS } from './reviewKeys';
 
 /**
  * The app's React Query client, passed to `OxyProvider`. Offline-first so
@@ -23,5 +24,5 @@ export const queryClient = new QueryClient({
 export const ATLAS_ACCOUNT_QUERIES: AccountQueriesConfig = {
   roots: [],
   memoryOnlyRoots: ['store-own-review'],
-  mutationKeys: [['store-write-review'], ['store-delete-review']],
+  mutationKeys: [ATLAS_REVIEW_MUTATION_KEYS.write, ATLAS_REVIEW_MUTATION_KEYS.delete],
 };

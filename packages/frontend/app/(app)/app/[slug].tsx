@@ -13,7 +13,7 @@ import { RiStore2Line } from '@oxy.so/bloom/icons/RiStore2Line';
 import { ReviewCard } from '@oxy.so/bloom/listing-details';
 import { Lockup, LockupSkeleton } from '@oxy.so/bloom/lockup';
 import { Shelf } from '@oxy.so/bloom/media-shelf';
-import { Rating, RatingInput, RatingSummary } from '@oxy.so/bloom/rating';
+import { Rating, RatingSummary } from '@oxy.so/bloom/rating';
 import {
   SegmentedControl,
   SegmentedControlItem,
@@ -21,21 +21,18 @@ import {
 } from '@oxy.so/bloom/segmented-control';
 import * as Skeleton from '@oxy.so/bloom/skeleton';
 import { useTheme } from '@oxy.so/bloom/theme';
-import { Text } from '@oxy.so/bloom/typography';
-import { useAuth, useOxy } from '@oxy.so/services/ui/client';
+import { useOxy } from '@oxy.so/services/ui/client';
 import { CategoryGlyph } from '@/components/navigation';
+import { WriteReview } from '@/components/write-review';
 import { DetailPage } from '@/components/page';
 import { AppShelf, GUTTER, SectionTitle } from '@/components/store';
 import { useTranslation } from '@/lib/i18n';
 import {
   formatCount,
   formatRating,
-  useDeleteMyStoreReview,
-  useMyStoreReview,
   useStoreApp,
   useStoreApps,
   useStoreReviews,
-  useWriteStoreReview,
   type StoreListingDetail,
   type StoreReview,
 } from '@/lib/store';
@@ -399,62 +396,6 @@ function ReviewTile({ review }: { review: StoreReview }) {
         />
       </View>
     </Card>
-  );
-}
-
-/**
- * Writing a review is the only thing in Atlas that needs an account, so the
- * prompt lives here rather than in front of the whole app — and it opens the
- * SDK's in-app dialog instead of navigating anywhere.
- */
-function WriteReview({ slug }: { slug: string }) {
-  const { t } = useTranslation();
-  const { colors } = useTheme();
-  const { user, canUsePrivateApi, signIn } = useAuth();
-  const { data: mine } = useMyStoreReview(slug);
-  const write = useWriteStoreReview(slug);
-  const remove = useDeleteMyStoreReview(slug);
-
-  const [selection, setSelection] = useState<{ accountId: string; rating: number } | null>(null);
-  const chosen =
-    (selection?.accountId === user?.id ? selection?.rating : undefined) ?? mine?.rating ?? null;
-
-  if (!canUsePrivateApi || !user) {
-    return (
-      <View className="flex-row">
-        <Button appearance="subtle" tone="accent" onPress={() => void signIn()}>
-          {t('app.signInToReview')}
-        </Button>
-      </View>
-    );
-  }
-
-  return (
-    <View className="flex-row flex-wrap items-center gap-x-4 gap-y-2">
-      <Text variant="body-medium" style={{ color: colors.textSecondary }}>
-        {mine ? t('app.yourRating') : t('app.tapToRate')}
-      </Text>
-      <RatingInput
-        value={chosen}
-        disabled={write.isPending}
-        accessibilityLabel={t('app.rateIt')}
-        onChange={(rating) => {
-          setSelection({ accountId: user.id, rating });
-          write.mutate({ rating, title: mine?.title ?? null, body: mine?.body ?? null });
-        }}
-      />
-      {mine ? (
-        <Button
-          appearance="plain"
-          tone="accent"
-          size="sm"
-          loading={remove.isPending}
-          onPress={() => remove.mutate()}
-        >
-          {t('app.withdrawReview')}
-        </Button>
-      ) : null}
-    </View>
   );
 }
 
