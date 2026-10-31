@@ -12,10 +12,9 @@ import {
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
 mock.module('react-native', () => ({ View: 'view' }));
-mock.module('react-native-svg', () => ({ default: 'svg', Circle: 'circle' }));
 mock.module('@oxy.so/bloom/alert-dialog', () => ({ AlertDialog: 'alert-dialog' }));
 mock.module('@oxy.so/bloom/button', () => ({ Button: 'button' }));
-mock.module('@oxy.so/bloom/loading', () => ({ SpinnerIcon: 'spinner' }));
+mock.module('@oxy.so/bloom/stat-bar', () => ({ MeterRing: 'meter-ring' }));
 mock.module('@oxy.so/bloom/theme', () => ({
   useTheme: () => ({ colors: { textSecondary: 'grey', primary: 'blue', border: 'line' } }),
 }));
@@ -135,17 +134,17 @@ test('Get asks the machine to install; a ring while it installs; then Open, whic
   });
   expect(m.asked).toContain('install get-a');
   expect(r.root.findAllByType('button' as never)).toHaveLength(0);
-  expect(
-    r.root.findByProps({ testID: 'install-progress' }).props.accessibilityValue,
-  ).toBeUndefined();
+  const waiting = r.root.findByType('meter-ring' as never).props;
+  expect(waiting.indeterminate).toBe(true);
+  expect(waiting.accessibilityLabel).toBe('install.installing(Notes)');
+  // Nothing in the store can stop the machine's install: no stop square.
+  expect(waiting.onStop).toBeUndefined();
 
   // The person confirmed; the machine says how far it is.
   await act(async () => m.tell('get-a', { state: 'installing', fraction: 0.5 }));
-  expect(r.root.findByProps({ testID: 'install-progress' }).props.accessibilityValue).toEqual({
-    min: 0,
-    max: 100,
-    now: 50,
-  });
+  const ring = r.root.findByType('meter-ring' as never).props;
+  expect(ring.indeterminate).toBe(false);
+  expect(ring.value).toBe(0.5);
 
   await act(async () => {
     m.tell('get-a', { state: 'installed', version: '1.0.0' });
