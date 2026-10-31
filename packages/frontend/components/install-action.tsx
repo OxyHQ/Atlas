@@ -1,9 +1,7 @@
 import { useState, type ReactNode } from 'react';
-import { View } from 'react-native';
-import Svg, { Circle } from 'react-native-svg';
 import { AlertDialog } from '@oxy.so/bloom/alert-dialog';
 import { Button } from '@oxy.so/bloom/button';
-import { SpinnerIcon } from '@oxy.so/bloom/loading';
+import { MeterRing } from '@oxy.so/bloom/stat-bar';
 import { useTheme } from '@oxy.so/bloom/theme';
 import { Text } from '@oxy.so/bloom/typography';
 import { useTranslation } from '@/lib/i18n';
@@ -62,11 +60,17 @@ export function InstallAction({
 
   if (state.state === 'installing' || busy) {
     const fraction = state.state === 'installing' ? state.fraction : null;
+    // Bloom's download ring: turning while the machine cannot tell how far it is (asking the
+    // person, compiling), its share once it can. No stop square: the machine's installer
+    // cannot be stopped from the store.
     return (
-      <ProgressRing
-        fraction={fraction}
+      <MeterRing
+        value={fraction ?? 0}
+        indeterminate={fraction === null}
         size={size === 'sm' ? 28 : 32}
-        label={t('install.installing', { name })}
+        thickness={2.5}
+        accessibilityLabel={t('install.installing', { name })}
+        testID="install-progress"
       />
     );
   }
@@ -112,62 +116,5 @@ export function InstallAction({
         hideCancel
       />
     </>
-  );
-}
-
-/**
- * The App Store's download ring: how far an install is, or a spinner while the machine cannot
- * tell (asking the person, compiling).
- */
-function ProgressRing({
-  fraction,
-  size,
-  label,
-}: {
-  fraction: number | null;
-  size: number;
-  label: string;
-}) {
-  const { colors } = useTheme();
-  const stroke = 2.5;
-  const radius = (size - stroke) / 2;
-  const circumference = 2 * Math.PI * radius;
-  return (
-    <View
-      accessibilityRole="progressbar"
-      accessibilityLabel={label}
-      accessibilityValue={
-        fraction === null ? undefined : { min: 0, max: 100, now: Math.round(fraction * 100) }
-      }
-      style={{ width: size, height: size, alignItems: 'center', justifyContent: 'center' }}
-      testID="install-progress"
-    >
-      {fraction === null ? (
-        <SpinnerIcon size={size} color={colors.primary} />
-      ) : (
-        <Svg width={size} height={size}>
-          <Circle
-            cx={size / 2}
-            cy={size / 2}
-            r={radius}
-            stroke={colors.border}
-            strokeWidth={stroke}
-            fill="none"
-          />
-          <Circle
-            cx={size / 2}
-            cy={size / 2}
-            r={radius}
-            stroke={colors.primary}
-            strokeWidth={stroke}
-            fill="none"
-            strokeLinecap="round"
-            strokeDasharray={`${circumference} ${circumference}`}
-            strokeDashoffset={circumference * (1 - fraction)}
-            transform={`rotate(-90 ${size / 2} ${size / 2})`}
-          />
-        </Svg>
-      )}
-    </View>
   );
 }
