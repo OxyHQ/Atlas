@@ -1,4 +1,4 @@
-import { useCallback, useLayoutEffect, useMemo, useRef, useSyncExternalStore } from 'react';
+import { useLayoutEffect, useMemo, useRef } from 'react';
 import { useMutation, useQuery, useQueryClient, type MutateOptions } from '@tanstack/react-query';
 import { useAuth, useOxy } from '@oxy.so/services/ui/client';
 import type {
@@ -10,6 +10,7 @@ import type {
   WriteStoreReviewInput,
 } from '@oxy.so/core';
 import { ATLAS_REVIEW_MUTATION_KEYS } from './reviewKeys';
+import { useReviewSession } from './reviewSession';
 
 /**
  * Atlas reads the store through `@oxy.so/core`'s store mixin, never a hand-rolled
@@ -90,10 +91,10 @@ export function useMyStoreReview(slug: string) {
   const { oxyServices } = useOxy();
   const { user, canUsePrivateApi } = useAuth();
   const accountId = user?.id ?? null;
-  const epoch = oxyServices.http.getSessionEpoch();
-  const sameSubject = accountId !== null && oxyServices.session.userId === accountId;
+  const { epoch, subject } = useReviewSession(oxyServices);
+  const sameSubject = accountId !== null && subject === accountId;
 
-  return useQuery({
+  const query = useQuery({
     queryKey: queryKeys.ownReview(slug, accountId),
     queryFn: () => {
       if (epoch !== oxyServices.http.getSessionEpoch() || oxyServices.session.userId !== accountId)
@@ -103,6 +104,7 @@ export function useMyStoreReview(slug: string) {
     enabled: !!slug && canUsePrivateApi && sameSubject,
     staleTime: 1000 * 30,
   });
+  return { ...query, data: canUsePrivateApi && sameSubject ? query.data : undefined };
 }
 
 /**
@@ -156,19 +158,12 @@ function useOwnedReviewMutation<TInput, TResult>(
   const { oxyServices } = useOxy();
   const { user, canUsePrivateApi } = useAuth();
   const accountId = user?.id ?? null;
-  const http = oxyServices.http;
-  const subscribe = useCallback(
-    (notify: () => void) => http.addTokenChangeListener(notify),
-    [http],
-  );
-  const snapshot = useCallback(() => http.getSessionEpoch(), [http]);
-  const epoch = useSyncExternalStore(subscribe, snapshot, snapshot);
+  const { epoch, subject } = useReviewSession(oxyServices);
   const queryClient = useQueryClient();
   const current = useRef<ReviewOwner | null>(null);
   const ownAttempt = useRef(0);
   const latestAttempt = sharedAttempt ?? ownAttempt;
-  const enabled =
-    canUsePrivateApi && accountId !== null && oxyServices.session.userId === accountId;
+  const enabled = canUsePrivateApi && accountId !== null && subject === accountId;
   const owner = { slug, accountId, enabled, epoch, oxyServices };
   useLayoutEffect(() => {
     current.current = { slug, accountId, enabled, epoch, oxyServices };

@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState, useSyncExternalStore } from 'react';
+import { useRef, useState } from 'react';
 import { View } from 'react-native';
 import { Button } from '@oxy.so/bloom/button';
 import { RatingInput } from '@oxy.so/bloom/rating';
@@ -7,6 +7,7 @@ import { Text } from '@oxy.so/bloom/typography';
 import { useAuth, useOxy } from '@oxy.so/services/ui/client';
 import { useTranslation } from '../lib/i18n';
 import { useDeleteMyStoreReview, useMyStoreReview, useWriteStoreReview } from '../lib/store';
+import { useReviewSession } from '../lib/reviewSession';
 
 /**
  * Writing a review is the only thing in Atlas that needs an account, so the
@@ -16,21 +17,20 @@ import { useDeleteMyStoreReview, useMyStoreReview, useWriteStoreReview } from '.
 export function WriteReview({ slug }: { slug: string }) {
   const { user } = useAuth();
   const { oxyServices } = useOxy();
-  const http = oxyServices.http;
-  const subscribe = useCallback(
-    (notify: () => void) => http.addTokenChangeListener(notify),
-    [http],
+  const { epoch, subject } = useReviewSession(oxyServices);
+  return (
+    <ReviewSession
+      key={JSON.stringify([slug, user?.id ?? null, epoch, subject])}
+      slug={slug}
+      subject={subject}
+    />
   );
-  const snapshot = useCallback(() => http.getSessionEpoch(), [http]);
-  const epoch = useSyncExternalStore(subscribe, snapshot, snapshot);
-  return <ReviewSession key={JSON.stringify([slug, user?.id ?? null, epoch])} slug={slug} />;
 }
 
-function ReviewSession({ slug }: { slug: string }) {
+function ReviewSession({ slug, subject }: { slug: string; subject: string | null }) {
   const { t } = useTranslation();
   const { colors } = useTheme();
   const { user, canUsePrivateApi, signIn } = useAuth();
-  const { oxyServices } = useOxy();
   const { data: mine } = useMyStoreReview(slug);
   const mutationAttempt = useRef(0);
   const write = useWriteStoreReview(slug, mutationAttempt);
@@ -53,7 +53,7 @@ function ReviewSession({ slug }: { slug: string }) {
     );
   }
 
-  if (oxyServices.session.userId !== user.id) {
+  if (subject !== user.id) {
     return <Text>{t('app.reviewSessionUnavailable')}</Text>;
   }
 

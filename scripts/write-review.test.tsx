@@ -2,6 +2,11 @@
 import { afterEach, expect, mock, test } from 'bun:test';
 import { act, create, type ReactTestRenderer } from 'react-test-renderer';
 import { QueryClient, QueryClientProvider, onlineManager } from '@tanstack/react-query';
+import { randomUUID } from 'node:crypto';
+import { readFileSync, unlinkSync, writeFileSync } from 'node:fs';
+import { resolve } from 'node:path';
+// biome-ignore lint/correctness/noUnresolvedImports: Bun resolves Babel's package exports.
+import { transformSync } from '@babel/core';
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 let accountId: string | null = 'alice';
@@ -9,6 +14,7 @@ let tokenAccountId: string | null | undefined;
 let epoch = 1;
 let failWrite = true;
 let failDelete = false;
+const listeners = new Set<() => void>();
 let writeImpl = async (_slug: string, input: { rating: number }) => {
   if (failWrite) throw new Error('offline');
   return { ...input, title: null, body: null };
@@ -19,7 +25,10 @@ let deleteImpl = async () => {
 const oxyServices = {
   http: {
     getSessionEpoch: () => epoch,
-    addTokenChangeListener: () => () => {},
+    addTokenChangeListener: (listener: () => void) => {
+      listeners.add(listener);
+      return () => listeners.delete(listener);
+    },
   },
   session: {
     get userId() {
@@ -45,7 +54,35 @@ mock.module('@oxy.so/bloom/theme', () => ({
   useTheme: () => ({ colors: { textSecondary: 'grey' } }),
 }));
 mock.module('@oxy.so/bloom/typography', () => ({ Text: 'text' }));
-const { WriteReview } = await import('../packages/frontend/components/write-review');
+const sourcePath = resolve('packages/frontend/components/write-review.tsx');
+const compiledPath = resolve(
+  `packages/frontend/components/.write-review-${process.pid}-${randomUUID()}.mjs`,
+);
+const transformed = transformSync(readFileSync(sourcePath, 'utf8'), {
+  filename: sourcePath,
+  babelrc: false,
+  configFile: false,
+  plugins: [
+    [require('babel-plugin-react-compiler'), { target: '19' }],
+    // biome-ignore lint/correctness/noUnresolvedImports: Bun resolves Babel's package exports.
+    [require('@babel/plugin-transform-typescript'), { allExtensions: true, isTSX: true }],
+    // biome-ignore lint/correctness/noUnresolvedImports: Bun resolves Babel's package exports.
+    [require('@babel/plugin-transform-react-jsx'), { runtime: 'automatic' }],
+  ],
+})?.code;
+if (
+  !transformed?.includes('react/compiler-runtime') ||
+  !/function WriteReview\([^)]*\)\s*\{\s*const \$ =/.test(transformed)
+) {
+  throw new Error('React Compiler did not compile WriteReview');
+}
+writeFileSync(compiledPath, transformed, { flag: 'wx' });
+let WriteReview: typeof import('../packages/frontend/components/write-review').WriteReview;
+try {
+  ({ WriteReview } = await import(compiledPath));
+} finally {
+  unlinkSync(compiledPath);
+}
 const { LocaleProvider } = await import('../packages/frontend/lib/i18n');
 let renderer: ReactTestRenderer | undefined;
 let client: QueryClient | undefined;
@@ -63,6 +100,7 @@ afterEach(async () => {
   onlineManager.setOnline(true);
   accountId = 'alice';
   tokenAccountId = undefined;
+  listeners.clear();
   epoch = 1;
   failWrite = true;
   failDelete = false;
@@ -73,6 +111,27 @@ afterEach(async () => {
   deleteImpl = async () => {
     if (failDelete) throw new Error('offline');
   };
+});
+
+test('a bearer change hides review controls without a parent rerender or epoch change', async () => {
+  client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  await act(async () => {
+    renderer = create(
+      <QueryClientProvider client={client!}>
+        <LocaleProvider>
+          <WriteReview slug="app" />
+        </LocaleProvider>
+      </QueryClientProvider>,
+    );
+  });
+  await flush();
+  expect(renderer!.root.findAllByType('rating-input')).toHaveLength(1);
+  tokenAccountId = 'bob';
+  await act(async () => {
+    for (const listener of [...listeners]) listener();
+  });
+  expect(renderer!.root.findAllByType('rating-input')).toHaveLength(0);
+  expect(JSON.stringify(renderer!.toJSON())).toContain('until your account is verified');
 });
 
 test('the review controls are unavailable while bearer and projected account disagree', async () => {
