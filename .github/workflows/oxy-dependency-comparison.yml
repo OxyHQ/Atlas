@@ -6,7 +6,6 @@ on:
       - package.json
       - bun.lock
       - packages/frontend/package.json
-      - scripts/check-android-device-session-autolinking.mjs
       - scripts/compare-js-bundles.mjs
       - scripts/compare-js-bundles.test.mjs
       - .github/workflows/oxy-dependency-comparison.yml
@@ -56,7 +55,10 @@ jobs:
           bun install --frozen-lockfile --minimum-release-age=0
           bun run test:store
           bun run --cwd packages/frontend typecheck
-          node scripts/check-android-device-session-autolinking.mjs
+          bun run oxy-doctor-expo-android --project-root=packages/frontend \
+            --require-source=SharedDeviceSessionPublish.kt \
+            --require-source=SharedDeviceSessionSweep.kt \
+            --require-source=OxyDeviceSessionStore.kt
           bun run build:frontend
       - name: Report total emitted JavaScript sizes
         run: |
