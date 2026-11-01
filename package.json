@@ -13,6 +13,7 @@
     "lint": "biome check . && bun run --cwd packages/frontend lint",
     "postinstall": "bun run build:shared-types",
     "test:worker": "bun test scripts/worker.test.ts",
+    "test:ask-alia": "bun test scripts/ask-alia.test.tsx",
     "lint:fix": "biome check --write .",
     "format": "biome format --write .",
     "test:store": "bun test scripts/store-session.test.tsx && bun test scripts/write-review.test.tsx && bun test scripts/review-account-ownership.test.ts && bun test scripts/review-sdk-subject.test.ts && bun test scripts/store-compiler.test.tsx"
@@ -32,7 +33,7 @@
     "@oxy.so/bloom": "15.66.0",
     "@oxy.so/contracts": "6.2.0",
     "@oxy.so/protocol": "1.5.1",
-    "@oxy.so/services": "13.15.5",
+    "@oxy.so/services": "14.0.0",
     "react-native-css": "3.1.0-rc.0",
     "lightningcss": "1.30.1"
   },
@@ -41,7 +42,7 @@
     "@oxy.so/bloom": "15.66.0",
     "@oxy.so/contracts": "6.2.0",
     "@oxy.so/protocol": "1.5.1",
-    "@oxy.so/services": "13.15.5",
+    "@oxy.so/services": "14.0.0",
     "react-native-css": "3.1.0-rc.0",
     "lightningcss": "1.30.1"
   }
