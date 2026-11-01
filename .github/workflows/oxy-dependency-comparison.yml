@@ -1,0 +1,66 @@
+name: Oxy dependency comparison
+
+on:
+  pull_request:
+    paths:
+      - package.json
+      - bun.lock
+      - packages/frontend/package.json
+      - scripts/check-android-device-session-autolinking.mjs
+      - scripts/compare-js-bundles.mjs
+      - scripts/compare-js-bundles.test.mjs
+      - .github/workflows/oxy-dependency-comparison.yml
+
+permissions:
+  contents: read
+
+jobs:
+  compare:
+    name: Compare Oxy dependency candidate
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      EXPO_PUBLIC_API_URL: https://api.oxy.so
+      EXPO_PUBLIC_OXY_CLIENT_ID: ${{ vars.EXPO_PUBLIC_OXY_CLIENT_ID }}
+    steps:
+      - name: Check out exact base
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+          path: baseline
+          persist-credentials: false
+      - name: Check out exact candidate
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          path: candidate
+          persist-credentials: false
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.3
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Verify comparison tool
+        run: node --test candidate/scripts/compare-js-bundles.test.mjs
+      - name: Build and test the base
+        working-directory: baseline
+        run: |
+          bun install --frozen-lockfile --minimum-release-age=0
+          bun run test:store
+          bun run --cwd packages/frontend typecheck
+          bun run build:frontend
+      - name: Build and test the candidate
+        working-directory: candidate
+        run: |
+          bun install --frozen-lockfile --minimum-release-age=0
+          bun run test:store
+          bun run --cwd packages/frontend typecheck
+          node scripts/check-android-device-session-autolinking.mjs
+          bun run build:frontend
+      - name: Report total emitted JavaScript sizes
+        run: |
+          echo "Base $(git -C baseline rev-parse HEAD)" >> "$GITHUB_STEP_SUMMARY"
+          echo "Candidate $(git -C candidate rev-parse HEAD)" >> "$GITHUB_STEP_SUMMARY"
+          echo 'Total emitted JavaScript, with each file gzipped independently; not initial page transfer:' >> "$GITHUB_STEP_SUMMARY"
+          node candidate/scripts/compare-js-bundles.mjs baseline/packages/frontend/dist candidate/packages/frontend/dist | tee -a "$GITHUB_STEP_SUMMARY"
