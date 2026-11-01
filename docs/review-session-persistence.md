@@ -14,12 +14,16 @@ invalidates pending callbacks, and the component allows only one action at a
 time. An already-sent request cannot be unsent when the session changes.
 
 The projected user must match `oxyServices.session.userId` from the current
-bearer before an own-review read or mutation can run. Core 7.9.1 derives that
+bearer before an own-review read or mutation can run. Core 7.10.5 derives that
 value from `userId` or `id`; opaque or `sub`-only tokens leave reviews
 unavailable rather than associating a request with an unproven account. The
 current Oxy API session issuer includes `userId` on access tokens, including
 standard refresh rotation. Synthetic SDK tests cover those claims and their
 absence; they do not replace a native-device sign-in and refresh test.
+
+Services 13.15.5 changes the Android device-session module. An existing Android
+installation needs a new native build to receive that code; a web or JavaScript
+deployment cannot replace its native module.
 
 Earlier Atlas versions used keys with an app slug and account ID appended;
 those keys did not match the registered account keys. A mutation left in
