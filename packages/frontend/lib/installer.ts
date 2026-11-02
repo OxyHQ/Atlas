@@ -6,6 +6,7 @@ import {
   type StoreInstallState,
   type StoreUpdates,
 } from '@oxy.so/core';
+import { InstallNarration, type InstallWords } from './install-narration';
 
 /**
  * Installing, opening and updating, through the machine's installer: `@oxy.so/core`'s seam beside
@@ -45,6 +46,8 @@ class InstallStates {
   private readonly states = new Map<string, InstallState>();
   private readonly listeners = new Set<() => void>();
   private readonly pending = new Set<string>();
+  /** The installs and updates the person asked for here, each told as it goes. */
+  private readonly narrations = new Map<string, InstallNarration>();
   private scheduled = false;
   private unsubscribe: (() => void) | null = null;
 
@@ -83,10 +86,20 @@ class InstallStates {
     });
   }
 
+  /** Tells `slug`'s install or update as it goes, until `forget`. */
+  narrate(slug: string, narration: InstallNarration): void {
+    this.narrations.set(slug, narration);
+  }
+
+  forget(slug: string, narration: InstallNarration): void {
+    if (this.narrations.get(slug) === narration) this.narrations.delete(slug);
+  }
+
   set(slug: string, state: InstallState): void {
     const before = this.states.get(slug);
     if (before && JSON.stringify(before) === JSON.stringify(state)) return;
     this.states.set(slug, state);
+    this.narrations.get(slug)?.update(state);
     for (const listener of this.listeners) listener();
   }
 }
@@ -126,26 +139,35 @@ export type InstallFailure = { action: 'install' | 'update' | 'open'; error: unk
 /**
  * The action for a listing's state, run through the installer. Resolves with the failure Atlas
  * must say itself, or null when there is nothing to say (done, declined in the machine's sheet,
- * or told by the machine).
+ * or told by the machine). With `words`, an install or an update is told to the screen reader as
+ * it goes (`InstallNarration`), wherever the person's focus is meanwhile.
  */
 export async function runInstallAction(
   installer: StoreInstaller,
   slug: string,
   state: InstallState,
+  words?: InstallWords,
 ): Promise<InstallFailure | null> {
   const action =
     state.state === 'installed' ? 'open' : state.state === 'updateAvailable' ? 'update' : 'install';
+  const states = installStates(installer);
+  const narration = words && action !== 'open' ? new InstallNarration(words) : null;
+  if (narration) states.narrate(slug, narration);
   try {
     if (action === 'open') await installer.open(slug);
-    else if (action === 'update') await installer.update(slug);
-    else await installer.install(slug);
+    else {
+      const outcome =
+        action === 'update' ? await installer.update(slug) : await installer.install(slug);
+      if (outcome !== 'declined') narration?.finish();
+    }
     return null;
   } catch (error) {
     if (error instanceof StoreInstallerError && error.told) return null;
     return { action, error };
   } finally {
+    if (narration) states.forget(slug, narration);
     // Whatever happened, where it stands now.
-    installStates(installer).want([slug]);
+    states.want([slug]);
   }
 }
 

@@ -11,7 +11,12 @@ import {
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
-mock.module('react-native', () => ({ View: 'view' }));
+/** What the screen reader was told, in order. */
+const announced: string[] = [];
+mock.module('react-native', () => ({
+  View: 'view',
+  AccessibilityInfo: { announceForAccessibility: (text: string) => announced.push(text) },
+}));
 mock.module('@oxy.so/bloom/alert-dialog', () => ({ AlertDialog: 'alert-dialog' }));
 mock.module('@oxy.so/bloom/button', () => ({ Button: 'button' }));
 mock.module('@oxy.so/bloom/stat-bar', () => ({ MeterRing: 'meter-ring' }));
@@ -22,12 +27,15 @@ mock.module('@oxy.so/bloom/typography', () => ({ Text: 'text' }));
 mock.module(resolve('packages/frontend/lib/i18n.tsx'), () => ({
   useTranslation: () => ({
     locale: 'en-US',
-    t: (key: string, params?: Record<string, string>) =>
-      params?.name ? `${key}(${params.name})` : key,
+    t: (key: string, params?: Record<string, string | number>) =>
+      params?.name
+        ? `${key}(${params.name}${params.percent === undefined ? '' : `, ${params.percent}`})`
+        : key,
   }),
 }));
 
 const { InstallAction } = await import('../packages/frontend/components/install-action');
+const { InstallNarration, QUIET_MS } = await import('../packages/frontend/lib/install-narration');
 
 /** A machine's installer of the test's own: each listing's state, and what was asked of it. */
 function machine(states: Record<string, StoreInstallState>, statusFails = false) {
@@ -107,6 +115,7 @@ const text = (node: unknown): string =>
         : '';
 
 afterEach(() => {
+  announced.length = 0;
   act(() => renderer?.unmount());
   renderer = null;
   setStoreInstaller(null);
@@ -121,44 +130,156 @@ test('without an installer, the store shows what it always has', async () => {
   expect(text(r.toJSON())).toBe('store.view');
 });
 
-test('Get asks the machine to install; a ring while it installs; then Open, which opens it', async () => {
+/** The ring the action's button draws (its icon, hidden from assistive technologies in a view). */
+const ring = (r: ReactTestRenderer) => {
+  const icon = button(r).props.icon as React.ReactElement<{
+    'aria-hidden'?: boolean;
+    children: React.ReactElement<Record<string, unknown>>;
+  }>;
+  expect(icon.props['aria-hidden']).toBe(true);
+  expect(icon.props.children.type).toBe('meter-ring' as never);
+  return icon.props.children.props;
+};
+
+test('Get asks the machine to install; the same control rings while it installs, then is Open', async () => {
   const m = machine({ 'get-a': { state: 'notInstalled' } });
   setStoreInstaller(m.installer);
   const r = await render(<InstallAction slug="get-a" name="Notes" />);
-  expect(button(r).props.accessibilityLabel).toBe('install.getApp(Notes)');
-  expect(text(button(r).props.children)).toBe('install.get');
+  const control = button(r);
+  expect(control.props.accessibilityLabel).toBe('install.getApp(Notes)');
+  expect(text(control.props.children)).toBe('install.get');
 
   // Pressed: the machine's sheet may be up, so the action waits as a spinner, never pressed twice.
   await act(async () => {
     button(r).props.onPress();
   });
   expect(m.asked).toContain('install get-a');
-  expect(r.root.findAllByType('button' as never)).toHaveLength(0);
-  const waiting = r.root.findByType('meter-ring' as never).props;
-  expect(waiting.indeterminate).toBe(true);
-  expect(waiting.accessibilityLabel).toBe('install.installing(Notes)');
+  // The same control, so the keyboard's focus and the screen reader's stay on it.
+  expect(button(r)).toBe(control);
+  expect(button(r).props.onPress).toBeUndefined();
+  expect(button(r).props.accessibilityLabel).toBe('install.installing(Notes)');
+  expect(ring(r).indeterminate).toBe(true);
   // Nothing in the store can stop the machine's install: no stop square.
-  expect(waiting.onStop).toBeUndefined();
+  expect(ring(r).onStop).toBeUndefined();
+  // Nothing is said while the machine's sheet asks.
+  expect(announced).toEqual([]);
 
-  // The person confirmed; the machine says how far it is.
+  // The person confirmed; the machine says how far it is: said as it starts, once.
   await act(async () => m.tell('get-a', { state: 'installing', fraction: 0.5 }));
-  const ring = r.root.findByType('meter-ring' as never).props;
-  expect(ring.indeterminate).toBe(false);
-  expect(ring.value).toBe(0.5);
+  expect(ring(r).indeterminate).toBe(false);
+  expect(ring(r).value).toBe(0.5);
+  expect(announced).toEqual(['install.installing(Notes)']);
+  // Every step of its progress is drawn, and none said a moment after the start.
+  await act(async () => m.tell('get-a', { state: 'installing', fraction: 0.8 }));
+  await act(async () => m.tell('get-a', { state: 'installing', fraction: 1 }));
+  await act(async () => m.tell('get-a', { state: 'installing', fraction: null }));
+  expect(ring(r).indeterminate).toBe(true);
+  expect(announced).toEqual(['install.installing(Notes)']);
 
   await act(async () => {
     m.tell('get-a', { state: 'installed', version: '1.0.0' });
     m.finish('installed');
     await new Promise((settled) => setTimeout(settled, 0));
   });
+  expect(button(r)).toBe(control);
   expect(text(button(r).props.children)).toBe('install.open');
+  expect(button(r).props.accessibilityLabel).toBe('install.openApp(Notes)');
+  expect(announced).toEqual(['install.installing(Notes)', 'install.installed(Notes)']);
   await act(async () => {
     await button(r).props.onPress();
   });
   expect(m.asked).toContain('open get-a');
+  // Opening says nothing: the application's window does.
+  expect(announced).toHaveLength(2);
 });
 
-test('an installed app with a newer release says Update, and updates', async () => {
+test("declined in the machine's sheet: Get again, on the same control, and nothing said", async () => {
+  const m = machine({ 'decl-a': { state: 'notInstalled' } });
+  setStoreInstaller(m.installer);
+  const r = await render(<InstallAction slug="decl-a" name="Notes" />);
+  const control = button(r);
+  await act(async () => {
+    button(r).props.onPress();
+  });
+  await act(async () => {
+    m.finish('declined');
+    await new Promise((settled) => setTimeout(settled, 0));
+  });
+  expect(button(r)).toBe(control);
+  expect(text(button(r).props.children)).toBe('install.get');
+  expect(announced).toEqual([]);
+});
+
+test('Get pressed from the keyboard: its start is said by the focus coming back from the sheet, not again', async () => {
+  const m = machine({ 'key-a': { state: 'notInstalled' } });
+  setStoreInstaller(m.installer);
+  const r = await render(<InstallAction slug="key-a" name="Notes" />);
+  act(() => button(r).props.onFocus());
+  await act(async () => {
+    button(r).props.onPress();
+  });
+  await act(async () => m.tell('key-a', { state: 'installing', fraction: 0 }));
+  expect(button(r).props.accessibilityLabel).toBe('install.installing(Notes)');
+  expect(announced).toEqual([]);
+  await act(async () => {
+    m.tell('key-a', { state: 'installed', version: '1.0.0' });
+    m.finish('installed');
+    await new Promise((settled) => setTimeout(settled, 0));
+  });
+  expect(announced).toEqual(['install.installed(Notes)']);
+});
+
+test('a slow install is said at the quarters it reaches, never more often than the pause', () => {
+  let now = 0;
+  const said: string[] = [];
+  const narration = new InstallNarration(
+    {
+      started: 'Installing Notes',
+      progress: (percent) => `Installing Notes, ${percent}%`,
+      done: 'Notes installed',
+    },
+    (text) => said.push(text),
+    () => now,
+  );
+  // Other listings' news and the states around an install say nothing.
+  narration.update({ state: 'notInstalled' });
+  narration.update({ state: 'installing', fraction: 0 });
+  for (const [at, fraction] of [
+    [1000, 0.1],
+    [2000, 0.3], // a quarter, within the pause after the start: not said, nor later
+    [9000, 0.45],
+    [10000, 0.5], // the next quarter, after the pause
+    [11000, 0.6],
+    [12000, 0.74],
+    [13000, 0.76], // a quarter within the pause
+    [20000, 0.99],
+    [30000, 1], // the end of the download is no share: compiling follows
+  ] as const) {
+    now = at;
+    narration.update({ state: 'installing', fraction });
+  }
+  narration.update({ state: 'installing', fraction: null });
+  narration.finish();
+  expect(said).toEqual(['Installing Notes', 'Installing Notes, 50%', 'Notes installed']);
+  expect(QUIET_MS).toBe(5000);
+
+  // A jump past several quarters says the last one reached, once.
+  const jumped: string[] = [];
+  now = 0;
+  const jump = new InstallNarration(
+    { started: 'start', progress: (percent) => `${percent}%`, done: 'done' },
+    (text) => jumped.push(text),
+    () => now,
+  );
+  jump.update({ state: 'installing', fraction: null });
+  now = 6000;
+  jump.update({ state: 'installing', fraction: 0.9 });
+  now = 12000;
+  jump.update({ state: 'installing', fraction: 0.95 });
+  expect(jumped).toEqual(['start', '75%']);
+});
+
+test('an installed app with a newer release says Update, and updates, said as it starts and ends', async () => {
   const m = machine({
     'upd-a': {
       state: 'updateAvailable',
@@ -170,10 +291,13 @@ test('an installed app with a newer release says Update, and updates', async () 
   setStoreInstaller(m.installer);
   const r = await render(<InstallAction slug="upd-a" name="Notes" />);
   expect(text(button(r).props.children)).toBe('install.update');
+  const control = button(r);
   await act(async () => {
     await button(r).props.onPress();
   });
   expect(m.asked).toContain('update upd-a');
+  expect(button(r)).toBe(control);
+  expect(announced).toEqual(['install.updated(Notes)']);
 });
 
 test('one the machine cannot run says so on its page, and falls back in a row', async () => {

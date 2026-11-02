@@ -16,7 +16,7 @@
     "test:ask-alia": "bun test scripts/ask-alia.test.tsx",
     "lint:fix": "biome check --write .",
     "format": "biome format --write .",
-    "test:store": "bun test scripts/store-session.test.tsx && bun test scripts/write-review.test.tsx && bun test scripts/review-account-ownership.test.ts && bun test scripts/review-sdk-subject.test.ts && bun test scripts/store-compiler.test.tsx && bun test scripts/install-action.test.tsx"
+    "test:store": "bun test scripts/store-session.test.tsx && bun test scripts/write-review.test.tsx && bun test scripts/review-account-ownership.test.ts && bun test scripts/review-sdk-subject.test.ts && bun test scripts/store-compiler.test.tsx && bun test scripts/install-action.test.tsx && bun test scripts/updates-page.test.tsx"
   },
   "devDependencies": {
     "@babel/core": "7.29.7",
