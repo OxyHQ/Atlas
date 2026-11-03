@@ -21,11 +21,14 @@ import {
 } from '@oxy.so/bloom/segmented-control';
 import * as Skeleton from '@oxy.so/bloom/skeleton';
 import { useTheme } from '@oxy.so/bloom/theme';
+import { Text } from '@oxy.so/bloom/typography';
 import { useOxy } from '@oxy.so/services/ui/client';
+import { InstallAction } from '@/components/install-action';
 import { CategoryGlyph } from '@/components/navigation';
 import { WriteReview } from '@/components/write-review';
 import { DetailPage } from '@/components/page';
 import { AppShelf, GUTTER, SectionTitle } from '@/components/store';
+import { useStoreInstaller } from '@/lib/installer';
 import { useTranslation } from '@/lib/i18n';
 import {
   formatCount,
@@ -96,18 +99,24 @@ export default function AppPage() {
           icon={app.icon}
           caption={app.category?.label}
           action={
-            app.websiteUrl ? (
-              <Button
-                appearance="solid"
-                tone="accent"
-                accessibilityLabel={t('app.openApp', { name: app.name })}
-                onPress={() => {
-                  if (app.websiteUrl) void Linking.openURL(app.websiteUrl);
-                }}
-              >
-                {t('app.open')}
-              </Button>
-            ) : undefined
+            <InstallAction
+              slug={app.slug}
+              name={app.name}
+              fallback={
+                app.websiteUrl ? (
+                  <Button
+                    appearance="solid"
+                    tone="accent"
+                    accessibilityLabel={t('app.openApp', { name: app.name })}
+                    onPress={() => {
+                      if (app.websiteUrl) void Linking.openURL(app.websiteUrl);
+                    }}
+                  >
+                    {t('app.open')}
+                  </Button>
+                ) : undefined
+              }
+            />
           }
           testID="app-header"
         />
@@ -356,10 +365,34 @@ function RatingsAndReviews({ app }: { app: StoreListingDetail }) {
       ) : null}
 
       <View className="px-5 pt-6">
-        <WriteReview slug={app.slug} />
+        <ReviewAction slug={app.slug} />
       </View>
     </View>
   );
+}
+
+/**
+ * Rating the app. Where the machine installs applications (OxyOS), an application's account is
+ * to come from the machine itself (OxyOS ADR 0020, decision 6), which it cannot give yet; until
+ * it can, Atlas there says reviews are not available yet and signs in to nothing. Reading them
+ * needs no account, and stays.
+ */
+function ReviewAction({ slug }: { slug: string }) {
+  const { t } = useTranslation();
+  const { colors } = useTheme();
+  const installer = useStoreInstaller();
+  if (installer) {
+    return (
+      <Text
+        variant="body-regular"
+        style={{ color: colors.textSecondary }}
+        testID="reviews-not-available"
+      >
+        {t('app.reviewsNotAvailable')}
+      </Text>
+    );
+  }
+  return <WriteReview slug={slug} />;
 }
 
 /** One review, as Bloom's `ReviewCard` on a card of its own. */

@@ -47,6 +47,18 @@ resolving. Do not reintroduce one.
   Pass the bare file id to Bloom's `<Avatar source>` with a `variant`; the
   registered `ImageResolver` builds the URL. Never construct one.
 
+## Installing is the machine's
+
+Where the machine installs applications (OxyOS), its runtime registers an installer in
+`@oxy.so/core` (`getStoreInstaller()`, beside `oxy.store`). *Get*, the progress ring, *Open*,
+*Update*, *Not available for this computer* and the Updates page go through it (`lib/installer.ts`,
+`components/install-action.tsx`), by a listing's slug; the machine asks the person in its own sheet.
+Never import anything of OxyOS's, never ask which platform this is, and never draw a confirmation of
+your own. An action is one control from *Get* to *Open* and from *Update* to done, never unmounted
+under the person's focus; its start, sparse progress and end are announced (`lib/install-narration.ts`),
+never each step of it. With no installer (web, iOS, Android) every one of them falls back to what the store shows
+there, so the web is unchanged.
+
 ## Package manager
 
 Always use **bun** (never npm/yarn). After changing any `package.json`, run `bun install` and commit `bun.lock` in the same commit.
