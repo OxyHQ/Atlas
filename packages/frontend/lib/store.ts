@@ -349,8 +349,3 @@ export function useStorefront() {
     refetch: apps.refetch,
   };
 }
-
-/** A count in the reader's digits and grouping: 1284 → "1,284" (en), "1.284" (de). */
-export function formatCount(count: number, locale: string): string {
-  return new Intl.NumberFormat(locale).format(count);
-}

@@ -6,6 +6,7 @@ import { Card } from '@oxy.so/bloom/card';
 import { EmptyState } from '@oxy.so/bloom/empty-state';
 import { RiErrorWarningLine } from '@oxy.so/bloom/icons/RiErrorWarningLine';
 import { RiStore2Line } from '@oxy.so/bloom/icons/RiStore2Line';
+import { formatNumber } from '@oxy.so/bloom/locale';
 import { Lockup, LockupSkeleton, type LockupSize } from '@oxy.so/bloom/lockup';
 import { Shelf, ShelfSkeleton } from '@oxy.so/bloom/media-shelf';
 import { Rating } from '@oxy.so/bloom/rating';
@@ -13,7 +14,7 @@ import { useTheme } from '@oxy.so/bloom/theme';
 import { Text } from '@oxy.so/bloom/typography';
 import { InstallAction } from '@/components/install-action';
 import { useTranslation } from '@/lib/i18n';
-import { formatCount, type StoreListingSummary } from '@/lib/store';
+import type { StoreListingSummary } from '@/lib/store';
 
 /**
  * The store's pieces, in the App Store's grammar, every one of them a Bloom
@@ -89,7 +90,7 @@ export function AppLockup({
         item.rating.average !== null ? (
           <Rating
             value={item.rating.average}
-            count={formatCount(item.rating.count, locale)}
+            count={formatNumber(item.rating.count, locale)}
             size="sm"
           />
         ) : undefined
@@ -224,7 +225,7 @@ export function FeaturedCard({ item, eyebrow }: { item: StoreListingSummary; eye
             item.rating.average !== null ? (
               <Rating
                 value={item.rating.average}
-                count={formatCount(item.rating.count, locale)}
+                count={formatNumber(item.rating.count, locale)}
                 size="sm"
               />
             ) : undefined
