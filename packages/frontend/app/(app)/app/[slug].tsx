@@ -11,6 +11,7 @@ import { GroupedSection, GroupedSectionItem } from '@oxy.so/bloom/grouped-sectio
 import { RiGlobalLine } from '@oxy.so/bloom/icons/RiGlobalLine';
 import { RiStore2Line } from '@oxy.so/bloom/icons/RiStore2Line';
 import { ReviewCard } from '@oxy.so/bloom/listing-details';
+import { formatNumber } from '@oxy.so/bloom/locale';
 import { Lockup, LockupSkeleton } from '@oxy.so/bloom/lockup';
 import { Shelf } from '@oxy.so/bloom/media-shelf';
 import { Rating, RatingSummary } from '@oxy.so/bloom/rating';
@@ -31,7 +32,6 @@ import { AppShelf, GUTTER, SectionTitle } from '@/components/store';
 import { useStoreInstaller } from '@/lib/installer';
 import { useTranslation } from '@/lib/i18n';
 import {
-  formatCount,
   formatRating,
   useStoreApp,
   useStoreApps,
@@ -193,7 +193,7 @@ function Facts({ app }: { app: StoreListingDetail }) {
         ? {
             key: 'ratings',
             label: t('app.reviewCount', {
-              count: formatCount(app.rating.count, locale),
+              count: formatNumber(app.rating.count, locale),
               plural: app.rating.count,
             }),
             value: rating,
@@ -208,7 +208,7 @@ function Facts({ app }: { app: StoreListingDetail }) {
             ),
             accessibilityLabel: t('app.ratedFact', {
               rating,
-              count: formatCount(app.rating.count, locale),
+              count: formatNumber(app.rating.count, locale),
               plural: app.rating.count,
             }),
           }
