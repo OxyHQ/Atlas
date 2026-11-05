@@ -33,6 +33,9 @@ jobs:
 
       - run: bun install --frozen-lockfile --minimum-release-age=0
 
+      - name: Oxy dependency health (oxy-doctor)
+        run: bun run doctor:oxy
+
       - run: bun run test:store
 
       - run: bun run test:ask-alia
