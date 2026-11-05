@@ -12,6 +12,7 @@
     "build:shared-types": "bun run --cwd packages/shared-types build",
     "build:frontend": "bun run --cwd packages/frontend export:web",
     "lint": "biome check . && bun run --cwd packages/frontend lint",
+    "doctor:oxy": "oxy-doctor --ci",
     "postinstall": "bun run build:shared-types",
     "test:worker": "bun test scripts/worker.test.ts",
     "test:ask-alia": "bun test scripts/ask-alia.test.tsx",
