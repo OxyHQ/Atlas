@@ -16,7 +16,7 @@ module.exports = {
     name: APP_NAME,
     slug: 'atlas',
     scheme: 'atlas',
-    version: '0.1.0',
+    version: '0.2.0',
     orientation: 'portrait',
     icon: './assets/images/atlas-icon.png',
     userInterfaceStyle: 'automatic',
