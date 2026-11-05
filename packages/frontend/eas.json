@@ -1,7 +1,7 @@
 {
   "cli": {
     "version": ">= 12.0.0",
-    "appVersionSource": "remote"
+    "appVersionSource": "local"
   },
   "build": {
     "development": {
@@ -12,7 +12,10 @@
       "distribution": "internal"
     },
     "production": {
-      "autoIncrement": true
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://api.oxy.so",
+        "EXPO_PUBLIC_OXY_CLIENT_ID": "oxy_dk_b1440fd0ad132ffe6279f47d1d769bed92e6cfeb7dc4a7e1"
+      }
     }
   },
   "submit": {

@@ -82,6 +82,11 @@ bun run lint:fix            # biome check --write .
 bun run format              # biome format --write .
 ```
 
+**Native:** `android-release.yml` (oxy's reusable workflow, on `seldon`) releases the signed AAB + APK as
+`android-v<version>` when `packages/frontend` `version` has none yet; every other push to main ships as an OTA
+update (`publish-update.yml`, Oxy Updates channel `production`, trusted publishing). `version` is the OTA
+runtime and the derived build number: bump it only for a native change. Build env: eas.json `production.env`.
+
 **Biome** (root `biome.json`) formats and lints everything. `packages/frontend/eslint.config.js`
 keeps only the preset rules Biome lacks (`expo/*` env-var checks, React Compiler `react-hooks/*`)
 — add a lint rule to Biome, not there. CI runs `bunx biome ci .` and `expo lint` (`lint.yml`).
