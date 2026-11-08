@@ -6,7 +6,6 @@ import '../global.css';
 
 import type { ReactNode } from 'react';
 import { Stack } from 'expo-router';
-import { StatusBar } from 'expo-status-bar';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { OxyProvider, useAccountColor, useOxy } from '@oxy.so/services/ui/client';
@@ -68,7 +67,6 @@ export default function RootLayout() {
                 <PortalProvider>
                   <OverlayInertBoundary>
                     <AppStack />
-                    <StatusBar style="auto" />
                   </OverlayInertBoundary>
                   <PortalOutlet />
                 </PortalProvider>
