@@ -1,3 +1,4 @@
+import assert from 'node:assert/strict';
 import { createRequire } from 'node:module';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
@@ -5,6 +6,7 @@ const require = createRequire(process.env.PLAYWRIGHT_PACKAGE_JSON);
 // biome-ignore lint/correctness/noUnresolvedImports: resolved from the explicit harness installation above.
 const { chromium } = require('@playwright/test');
 const origin = 'http://localhost:8131';
+const count = Number(process.env.FIXTURE_COUNT ?? 1);
 const output = process.env.BASELINE_OUTPUT ?? 'docs/audits/issue-663-rerun';
 mkdirSync(output, { recursive: true });
 const browser = await chromium.launch({
@@ -54,17 +56,15 @@ for (const mode of ['light', 'dark']) {
     if (u.pathname === '/store/categories') return json([]);
     if (u.pathname === '/store/apps')
       return json({
-        data: [
-          {
-            id: 'fixture-mail',
-            slug: 'fixture-mail',
-            name: 'Fixture Mail',
-            tagline: 'One synthetic result',
-            icon: null,
-            rating: { average: null, count: 0 },
-            category: null,
-          },
-        ],
+        data: Array.from({ length: count }, (_, index) => ({
+          id: `fixture-mail-${index}`,
+          slug: `fixture-mail-${index}`,
+          name: 'Fixture Mail',
+          tagline: 'One synthetic result',
+          icon: null,
+          rating: { average: null, count: 0 },
+          category: null,
+        })),
         pagination: { hasMore: false, total: 1, page: 1, limit: 100 },
       });
     if (u.pathname === '/session/user' || u.pathname === '/users/me')
@@ -82,9 +82,48 @@ for (const mode of ['light', 'dark']) {
   for (const width of [390, 1440]) {
     await page.setViewportSize({ width, height: width === 390 ? 844 : 900 });
     await page.waitForTimeout(700);
-    await page.screenshot({ path: `${output}/${mode}-${width}.png` });
+    if (count > 1) {
+      await page.evaluate(() => scrollTo(0, document.documentElement.scrollHeight));
+      await page.waitForTimeout(700);
+    }
+    if (process.env.CANDIDATE === '1' && width === 390)
+      await page.getByTestId('app-shell-panel-reserve').waitFor();
+    const png = await page.screenshot({ path: `${output}/${mode}-${width}.png` });
+    const readPixels = async (png) =>
+      page.evaluate(
+        async (data) => {
+          const image = new Image();
+          image.src = data;
+          await image.decode();
+          const canvas = document.createElement('canvas');
+          canvas.width = image.width;
+          canvas.height = image.height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(image, 0, 0);
+          return [700, 769, 770, 800, 840].map((y) => ({
+            x: 2,
+            y,
+            rgba: [...ctx.getImageData(2, y, 1, 1).data],
+          }));
+        },
+        `data:image/png;base64,${png.toString('base64')}`,
+      );
+    const pixels = await readPixels(png);
+    let backingPixels = null;
+    if (width === 390) {
+      const bar = page.getByTestId('atlas-shell-bottom-bar');
+      await bar.evaluate((node) => {
+        node.style.visibility = 'hidden';
+      });
+      const backing = await page.screenshot({ path: `${output}/${mode}-${width}-backing.png` });
+      backingPixels = await readPixels(backing);
+      await bar.evaluate((node) => {
+        node.style.visibility = '';
+      });
+    }
     const measurement = await page.evaluate(() => ({
       url: location.href,
+      scrollY,
       width: innerWidth,
       height: innerHeight,
       scrollHeight: document.documentElement.scrollHeight,
@@ -125,7 +164,20 @@ for (const mode of ['light', 'dark']) {
         rect: n.getBoundingClientRect().toJSON(),
       })),
     }));
-    report.frames.push({ mode, ...measurement });
+    const lastResult = await page.getByText('Fixture Mail', { exact: true }).last().boundingBox();
+    if (process.env.CANDIDATE === '1' && width === 390) {
+      assert.deepEqual(
+        pixels[1].rgba,
+        pixels[2].rgba,
+        'no painted discontinuity at the former y770 reserve boundary with bottom navigation visible',
+      );
+      const bar = measurement.regions.find((region) => region.id === 'atlas-shell-bottom-bar');
+      assert.ok(
+        lastResult.y + lastResult.height <= bar.y,
+        'last result can clear bottom navigation',
+      );
+    }
+    report.frames.push({ mode, pixels, backingPixels, count, lastResult, ...measurement });
   }
   await context.close();
 }
