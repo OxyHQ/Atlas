@@ -1,6 +1,7 @@
 /* Shared Oxy Tailwind v4 + NativeWind + Bloom base (imports + SDK @source globs).
    See @oxy.so/app-preset/base.css. App-specific globs and theme follow below. */
 @import "@oxy.so/app-preset/base.css";
+@import "@oxy.so/app-preset/css/document-scroll.css";
 
 @source "./app/**/*.{js,jsx,ts,tsx}";
 @source "./components/**/*.{js,jsx,ts,tsx}";
@@ -41,18 +42,12 @@
   }
 }
 
-/* The document is the scroll owner (Bloom's AppShell, `scroll="page"`, routes
-   are `Screen scroll="auto"`). Expo's react-native-web reset sets
-   `body { overflow: hidden }` for ScrollView-owned apps; this undoes it, as
-   Bloom's "Compose application layouts" asks of a web host: height 100% through
-   html, body and the root (never 100vh, which counts a classic scrollbar), and
-   both axes visible (one axis alone promotes the other to a second scroller).
-   The selectors outrank the reset's (`html body` over `body`, `body #root` over
-   `#root`) wherever the two stylesheets land in the document. */
+/* The explicit document-scroll preset above owns body overflow. Preserve the
+   existing full-height host chain for AppShell document pages; bounded shell
+   regions retain their own scroll owner. */
 html:root,
 html body,
 html body #root {
   height: 100%;
   min-height: 100%;
-  overflow: visible;
 }

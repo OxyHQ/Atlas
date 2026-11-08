@@ -1,0 +1,121 @@
+$ bun test scripts/store-session.test.tsx && bun test scripts/write-review.test.tsx && bun test scripts/review-account-ownership.test.ts && bun test scripts/review-sdk-subject.test.ts && bun test scripts/store-compiler.test.tsx && bun test scripts/install-action.test.tsx && bun test scripts/updates-page.test.tsx
+bun test v1.4.3 (c6da4a4d3)
+
+scripts/store-session.test.tsx:
+react-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+(pass) a stale retained mutation cannot start in another account [74.14ms]
+react-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+(pass) a write result cannot be observed or repopulate the cache after A→B→A [33.93ms]
+react-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+(pass) the own-review query is disabled after sign-out [32.00ms]
+react-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+(pass) a new bearer cannot execute A operations while auth still projects A [63.09ms]
+
+ 4 pass
+ 0 fail
+ 12 expect() calls
+Ran 4 tests across 1 file. [225.00ms]
+bun test v1.4.3 (c6da4a4d3)
+
+scripts/write-review.test.tsx:
+react-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+(pass) a bearer change hides review controls without a parent rerender or epoch change [57.38ms]
+react-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+(pass) the review controls are unavailable while bearer and projected account disagree [31.67ms]
+react-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+(pass) an offline failed rating restores the previous value and shows an error [101.47ms]
+react-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+(pass) a failed withdrawal keeps the rating and reports an error [96.21ms]
+react-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+(pass) a late result from A cannot restore its old selection or overwrite a new A session [223.09ms]
+react-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+(pass) a late withdrawal from A cannot clear the review of a new A session [156.65ms]
+react-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+(pass) a late error from A does not show an error in B [132.08ms]
+react-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+(pass) a second write is ignored until the first settles [186.93ms]
+react-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+(pass) a withdrawal in the same tick as a write is ignored until it settles [156.36ms]
+react-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+(pass) a write in the same tick as a withdrawal is ignored until it settles [156.45ms]
+
+ 10 pass
+ 0 fail
+ 39 expect() calls
+Ran 10 tests across 1 file. [1.63s]
+bun test v1.4.3 (c6da4a4d3)
+
+scripts/review-account-ownership.test.ts:
+(pass) offline-first without a retry fails the first offline attempt instead of queueing it [1.10ms]
+(pass) review mutation keys are classified as account-owned [0.22ms]
+(pass) a pending review is removed when switching accounts [0.83ms]
+(pass) an explicitly attached shared persistor excludes a paused registered review [1200.68ms]
+(pass) an explicitly attached shared persistor excludes a successful registered review [1200.98ms]
+(pass) a restored paused review has no unguarded default replay function [0.36ms]
+(pass) a hypothetical shared persistor preserves legacy mutations without granting replay [1200.87ms]
+
+ 7 pass
+ 0 fail
+ 11 expect() calls
+Ran 7 tests across 1 file. [3.71s]
+bun test v1.4.3 (c6da4a4d3)
+
+scripts/review-sdk-subject.test.ts:
+(pass) published Core resolves supported token subjects and same-session rotation [1.35ms]
+
+ 1 pass
+ 0 fail
+ 6 expect() calls
+Ran 1 test across 1 file. [27.00ms]
+bun test v1.4.3 (c6da4a4d3)
+
+scripts/store-compiler.test.tsx:
+react-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+(pass) compiled own-review query follows the new session on a stable HTTP instance [69.31ms]
+react-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+(pass) compiled query hides A when only the bearer changes, without a parent rerender [32.02ms]
+
+ 2 pass
+ 0 fail
+ 5 expect() calls
+Ran 2 tests across 1 file. [423.00ms]
+bun test v1.4.3 (c6da4a4d3)
+
+scripts/install-action.test.tsx:
+react-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+(pass) without an installer, the store shows what it always has [6.10ms]
+react-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+(pass) Get asks the machine to install; the same control rings while it installs, then is Open [6.17ms]
+react-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+(pass) declined in the machine's sheet: Get again, on the same control, and nothing said [3.58ms]
+react-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+(pass) Get pressed from the keyboard: its start is said by the focus coming back from the sheet, not again [3.64ms]
+(pass) a slow install is said at the quarters it reaches, never more often than the pause [0.12ms]
+react-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+(pass) an installed app with a newer release says Update, and updates, said as it starts and ends [1.87ms]
+react-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+react-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+(pass) one the machine cannot run says so on its page, and falls back in a row [3.47ms]
+react-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+(pass) when the machine cannot say, Get is offered, and what the machine told the person is not repeated [2.27ms]
+react-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+(pass) a failure the machine did not tell the person is said in an alert [1.79ms]
+react-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+(pass) a shelf of listings asks the machine once [1.93ms]
+
+ 10 pass
+ 0 fail
+ 54 expect() calls
+Ran 10 tests across 1 file. [62.00ms]
+bun test v1.4.3 (c6da4a4d3)
+
+scripts/updates-page.test.tsx:
+react-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+(pass) an update applied keeps its row and its control, said as it starts and as it ends [13.35ms]
+react-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+(pass) Check for Updates says what it found [2.18ms]
+
+ 2 pass
+ 0 fail
+ 13 expect() calls
+Ran 2 tests across 1 file. [47.00ms]

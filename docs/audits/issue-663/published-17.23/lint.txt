@@ -1,0 +1,3 @@
+$ biome check . && bun run --cwd packages/frontend lint
+Checked 64 files in 300ms. No fixes applied.
+$ expo lint

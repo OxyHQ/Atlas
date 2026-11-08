@@ -7,6 +7,7 @@ const require = createRequire(process.env.PLAYWRIGHT_PACKAGE_JSON);
 const { chromium } = require('@playwright/test');
 const origin = 'http://localhost:8131';
 const count = Number(process.env.FIXTURE_COUNT ?? 1);
+const verifyPublished = process.env.VERIFY_PUBLISHED === '1';
 const output = process.env.BASELINE_OUTPUT ?? 'docs/audits/issue-663-rerun';
 mkdirSync(output, { recursive: true });
 const browser = await chromium.launch({
@@ -18,6 +19,8 @@ const report = {
   frames: [],
   unexpected: [],
   errors: [],
+  dialogs: [],
+  blockedAuth: [],
 };
 for (const mode of ['light', 'dark']) {
   const context = await browser.newContext({
@@ -69,6 +72,14 @@ for (const mode of ['light', 'dark']) {
       });
     if (u.pathname === '/session/user' || u.pathname === '/users/me')
       return route.fulfill({ status: 401, json: { error: 'Anonymous' }, headers });
+    if (
+      verifyPublished &&
+      ((u.origin === 'https://auth.oxy.so' && u.pathname === '/bridge') ||
+        u.pathname === '/auth/session/create')
+    ) {
+      report.blockedAuth.push(`${r.method()} ${u.origin}${u.pathname}`);
+      return route.abort();
+    }
     report.unexpected.push(`${r.method()} ${u.origin}${u.pathname}`);
     return route.abort();
   });
@@ -79,14 +90,24 @@ for (const mode of ['light', 'dark']) {
   await page.getByText('Fixture Mail', { exact: true }).first().waitFor({ timeout: 30000 });
   await page.evaluate(() => document.fonts.ready);
   await page.waitForTimeout(1000);
-  for (const width of [390, 1440]) {
-    await page.setViewportSize({ width, height: width === 390 ? 844 : 900 });
+  for (const width of verifyPublished ? [320, 390, 1440] : [390, 1440]) {
+    await page.setViewportSize({ width, height: width <= 390 ? 844 : 900 });
     await page.waitForTimeout(700);
+    let wheel = null;
+    if (verifyPublished && count > 1) {
+      await page.evaluate(() => scrollTo(0, 0));
+      await page.waitForTimeout(300);
+      const before = await page.evaluate(() => scrollY);
+      await page.mouse.move(width - 30, 300);
+      await page.mouse.wheel(0, 650);
+      await page.waitForFunction((start) => scrollY > start + 100, before);
+      wheel = { before, after: await page.evaluate(() => scrollY) };
+    }
     if (count > 1) {
       await page.evaluate(() => scrollTo(0, document.documentElement.scrollHeight));
       await page.waitForTimeout(700);
     }
-    if (process.env.CANDIDATE === '1' && width === 390)
+    if ((process.env.CANDIDATE === '1' || verifyPublished) && width === 390)
       await page.getByTestId('app-shell-panel-reserve').waitFor();
     const png = await page.screenshot({ path: `${output}/${mode}-${width}.png` });
     const readPixels = async (png) =>
@@ -165,7 +186,7 @@ for (const mode of ['light', 'dark']) {
       })),
     }));
     const lastResult = await page.getByText('Fixture Mail', { exact: true }).last().boundingBox();
-    if (process.env.CANDIDATE === '1' && width === 390) {
+    if ((process.env.CANDIDATE === '1' || verifyPublished) && width === 390) {
       assert.deepEqual(
         pixels[1].rgba,
         pixels[2].rgba,
@@ -177,10 +198,59 @@ for (const mode of ['light', 'dark']) {
         'last result can clear bottom navigation',
       );
     }
-    report.frames.push({ mode, pixels, backingPixels, count, lastResult, ...measurement });
+    if (verifyPublished) {
+      assert.ok(
+        measurement.documentWidth <= width,
+        'normal content must not overflow horizontally',
+      );
+    }
+    report.frames.push({ mode, wheel, pixels, backingPixels, count, lastResult, ...measurement });
+  }
+  if (verifyPublished && count > 1) {
+    const before = await page.evaluate(() => scrollY);
+    await page.getByRole('button', { name: 'Sign In', exact: true }).click();
+    await page.getByRole('dialog').waitFor();
+    await page.waitForTimeout(400);
+    const locked = await page.evaluate(() => ({
+      y: scrollY,
+      overflow: getComputedStyle(document.body).overflow,
+    }));
+    assert.equal(locked.overflow, 'hidden', 'account dialog owns the document lock');
+    await page.mouse.move(1420, 300);
+    await page.mouse.wheel(0, -400);
+    await page.waitForTimeout(350);
+    assert.equal(
+      await page.evaluate(() => scrollY),
+      locked.y,
+      'wheel cannot move the locked document',
+    );
+    await page.keyboard.press('Escape');
+    await page.waitForTimeout(250);
+    assert.equal(
+      await page.getByRole('dialog').isVisible(),
+      true,
+      'account policy disables Escape dismissal',
+    );
+    await page.getByRole('dialog').getByRole('button', { name: 'Close', exact: true }).click();
+    await page.getByRole('dialog').waitFor({ state: 'hidden' });
+    await page.waitForTimeout(400);
+    const restored = await page.evaluate(() => scrollY);
+    assert.equal(restored, before, 'dismissal restores the same document position');
+    await page.mouse.wheel(0, -400);
+    await page.waitForFunction((start) => scrollY < start - 100, restored);
+    report.dialogs.push({
+      mode,
+      before,
+      locked,
+      restored,
+      afterWheel: await page.evaluate(() => scrollY),
+    });
   }
   await context.close();
 }
 await browser.close();
 writeFileSync(`${output}/report.json`, `${JSON.stringify(report, null, 2)}\n`);
 console.log({ frames: report.frames.length, errors: report.errors, unexpected: report.unexpected });
+
+assert.deepEqual(report.errors, [], 'no page errors');
+assert.deepEqual(report.unexpected, [], 'no unhandled external requests');
