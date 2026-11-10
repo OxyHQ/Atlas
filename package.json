@@ -31,8 +31,8 @@
     "react-test-renderer": "19.3.0"
   },
   "overrides": {
-    "@oxy.so/core": "7.47.1",
-    "@oxy.so/bloom": "17.31.0",
+    "@oxy.so/core": "7.48.0",
+    "@oxy.so/bloom": "18.4.2",
     "@oxy.so/contracts": "6.24.0",
     "@oxy.so/protocol": "1.11.0",
     "@oxy.so/services": "14.19.0",
@@ -40,8 +40,8 @@
     "lightningcss": "1.30.1"
   },
   "resolutions": {
-    "@oxy.so/core": "7.47.1",
-    "@oxy.so/bloom": "17.31.0",
+    "@oxy.so/core": "7.48.0",
+    "@oxy.so/bloom": "18.4.2",
     "@oxy.so/contracts": "6.24.0",
     "@oxy.so/protocol": "1.11.0",
     "@oxy.so/services": "14.19.0",
