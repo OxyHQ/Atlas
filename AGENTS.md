@@ -1,100 +1,78 @@
-# Atlas — the Oxy App Store
+# Atlas
 
-> Universal standards and Oxy-wide gotchas live in `~/Oxy/AGENTS.md`. Documentation belongs in `docs/`, history in git, status in issues. This file holds only RULES, commands and pointers. **Budget: under 8 KB.**
-
-Expo / React Native frontend for the Oxy app store, at **atlas.oxy.so**. Generated
-with `create-oxy-app --no-backend`.
-
-## Atlas has no backend, and that is the point
-
-The store lives in **oxy-api** (`OxyHQServices/packages/api`): `app_listings`,
-`app_reviews`, `app_categories`, and the routes over them. Atlas reads it through
-`@oxy.so/core`'s `oxy.store` namespace and writes reviews the same way. There is no server
-here to deploy, no database, and no second copy of any store rule.
-
-Where each surface lives:
-
-| | |
-|--|--|
-| The catalogue, reviews, moderation | oxy-api (`/store`, `/applications/:appId/listing`) |
-| The client for all of it | `@oxy.so/core` — `oxy.store` (`src/api/store.ts`) |
-| A publisher editing their page | Oxy Console → Apps → Store |
-| The storefront people browse | **here** |
-| oxy.so's own apps page | the website, which is a different product reading the same API |
-
-Add a store capability in oxy-api and the `oxy.store` namespace, never here.
-
-## The store is public
-
-Atlas has **no `(auth)`↔`(app)` swap** — the scaffold's is deliberately removed.
-Every read the storefront makes is a public endpoint, and gating the catalogue
-behind a login would hide it from exactly the people it exists to reach. Signing
-in is needed only to write a review, and it is `useAuth().signIn()` — the SDK's
-in-app dialog, opened on demand, never a navigation to a login screen.
-
-So there is no cold-boot gate: the store renders while the session is still
-resolving. Do not reintroduce one.
-
-## Things the API decides, not this app
-
-- **A rating is computed** from the visible reviews on every read. `average` is
-  `null` when nobody has reviewed an app — never `0` — so an unreviewed app shows
-  no rating at all rather than a zero-star one.
-- **`authorUsesApp`** is read from the reviewer's grant at request time. It is
-  `false` for a first-party app nobody consents to, so render its absence as
-  nothing rather than as a demotion.
-- **Icons, names and legal links come from the application**, not the listing.
-  Pass the bare file id to Bloom's `<Avatar source>` with a `variant`; the
-  registered `ImageResolver` builds the URL. Never construct one.
-
-## Installing is the machine's
-
-Where the machine installs applications (OxyOS), its runtime registers an installer in
-`@oxy.so/core` (`getStoreInstaller()`, beside `oxy.store`). *Get*, the progress ring, *Open*,
-*Update*, *Not available for this computer* and the Updates page go through it (`lib/installer.ts`,
-`components/install-action.tsx`), by a listing's slug; the machine asks the person in its own sheet.
-Never import anything of OxyOS's, never ask which platform this is, and never draw a confirmation of
-your own. An action is one control from *Get* to *Open* and from *Update* to done, never unmounted
-under the person's focus; its start, sparse progress and end are announced (`lib/install-narration.ts`),
-never each step of it. With no installer (web, iOS, Android) every one of them falls back to what the store shows
-there, so the web is unchanged.
-
-## Package manager
-
-Always use **bun** (never npm/yarn). After changing any `package.json`, run `bun install` and commit `bun.lock` in the same commit.
-
-## Architecture
-
-```
-packages/
-  frontend/       @atlas/frontend       Expo Router · NativeWind · Bloom · @oxy.so/services
-  shared-types/   @atlas/shared-types   Shared TypeScript types (CJS)
-```
+Atlas is the Oxy app store storefront (atlas.oxy.so): an Expo / React Native frontend with no
+backend of its own; the catalogue and reviews live in oxy-api and are read through `oxy.store`.
 
 ## Commands
 
 ```bash
-bun install
+bun install                 # also builds shared-types (postinstall)
 bun run dev:frontend        # Expo dev server
 bun run build:frontend      # expo export --platform web
-bun run lint                # biome check . + expo lint (minimal ESLint)
+bun run lint                # biome check . + expo lint
 bun run lint:fix            # biome check --write .
 bun run format              # biome format --write .
+bun run test:store          # store, review, install and updates tests
+bun run test:worker         # edge worker tests
+bun run test:ask-alia       # Ask Alia tests
+bun run doctor:oxy          # Oxy dependency check
 ```
 
-**Native:** `android-release.yml` (oxy's reusable workflow, on `seldon`) releases the signed AAB + APK as
-`android-v<version>` when `packages/frontend` `version` has none yet; every other push to main ships as an OTA
-update (`publish-update.yml`, Oxy Updates channel `production`, trusted publishing). `version` is the OTA
-runtime and the derived build number: bump it only for a native change. Build env: eas.json `production.env`.
+## Map
 
-**Biome** (root `biome.json`) formats and lints everything. `packages/frontend/eslint.config.js`
-keeps only the preset rules Biome lacks (`expo/*` env-var checks, React Compiler `react-hooks/*`)
-— add a lint rule to Biome, not there. CI runs `bunx biome ci .` and `expo lint` (`lint.yml`).
+- `packages/frontend`: the Expo Router app (`@atlas/frontend`).
+- `packages/shared-types`: shared TypeScript types (`@atlas/shared-types`).
+- `scripts/`: `bun test` files and bundle-comparison tooling.
+- [`docs/agent-rules.md`](docs/agent-rules.md): the rules below in depth.
 
-## Oxy SDK conventions (do not deviate)
+## Conventions that differ from defaults
 
-- **Import from `@oxy.so/services/ui/client`**, never the root `@oxy.so/services` barrel: the root still registers every account screen at import, which puts them all in the web first-paint bundle. The lean entry has `OxyProvider`, `useOxy`, `useAuth`, `ProfileButton`; the provider loads the screens as their own chunk.
-- **One provider:** `OxyProvider` (web + native) with the registered `clientId` (`EXPO_PUBLIC_OXY_CLIENT_ID`). Interactive sign-in is the in-app `OxyAccountDialog` — never redirect to an IdP.
-- **Config:** all Expo config comes from `@oxy.so/app-preset` — the app plugin (`['@oxy.so/app-preset', {}]`), `createOxyMetroConfig`, the shared Babel/ESLint configs (ESLint filtered down to what Biome lacks — see Commands), `base.css`, and the tsconfig bases. Do not copy-paste that config back into the app; update the preset instead.
-- **Theming:** NativeWind className-based only, via `BloomThemeProvider`. Never hardcode brand colors.
-- **Session gating:** gate private API calls on `useAuth().canUsePrivateApi`. Atlas has no `(auth)` group — see above — so there is no group swap to be the authority for.
+- Add store capabilities in oxy-api and `oxy.store`, never in this repo: there is no server and no
+  second copy of a store rule.
+- Keep the store public: no `(auth)` group and no cold-boot login gate, because a login wall hides
+  the catalogue from its audience. Sign in on demand with `useAuth().signIn()` only to write a review.
+- Render API-decided values as given: `average` is `null` (not `0`) with no reviews, and
+  `authorUsesApp: false` renders as nothing.
+- Pass bare file ids to Bloom's `<Avatar source>`; never build an icon or image URL.
+- Install, Open and Update go through `getStoreInstaller()` (`packages/frontend/lib/installer.ts`); never import from
+  OxyOS or draw your own confirmation.
+- Import from `@oxy.so/services/ui/client`, never the root barrel, to keep account screens out of
+  the web first-paint bundle.
+- Style with NativeWind classes via `BloomThemeProvider`; no hardcoded brand colors.
+- Take Expo config from `@oxy.so/app-preset`; update the preset rather than copying config.
+- Add lint rules to Biome, not ESLint (Biome gate: `bunx biome ci .` in `lint.yml`).
+- Use bun only; commit `bun.lock` with any `package.json` change.
+
+## Boundaries
+
+- Never edit `bun.lock` by hand or with another package manager; it is the CI lockfile gate.
+- Never bump `packages/frontend` `version` for a JS-only change: it is the OTA runtime and native
+  build number, so a bump triggers a native release.
+- Ask first before changing `eas.json`, workflow files, or the `@oxy.so/*` overrides in
+  `package.json` (the autobump workflow owns them).
+
+## Testing
+
+Run `bun run lint` and the `test:*` script for the area you touched. Done means lint and those
+tests pass locally and CI is green.
+
+## PR and commit rules
+
+Branch from `main`, open a PR, and merge with the repo's flow (squash). Native-affecting changes
+call out the `version` bump in the PR description.
+
+## Secrets
+
+Public client values come from `EXPO_PUBLIC_*` env vars (for example `EXPO_PUBLIC_OXY_CLIENT_ID`);
+build env is `eas.json` `production.env`. Never print or commit credentials.
+
+## Links
+
+- [Atlas rules in depth](docs/agent-rules.md)
+- [First-party platform](docs/first-party-platform.md)
+- [Oxy engineering standards](https://github.com/OxyHQ/oxy/blob/main/docs/engineering/standards.md)
+- [Lint and format](https://github.com/OxyHQ/oxy/blob/main/docs/engineering/lint-and-format.md)
+- [npm releases](https://github.com/OxyHQ/oxy/blob/main/docs/npm-releases.md)
+- [Bloom app conventions](https://github.com/OxyHQ/Bloom/blob/main/docs/app-conventions.mdx)
+
+Owner: Nate Isern (OxyHQ). Last reviewed: 2026-11-11.

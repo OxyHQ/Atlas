@@ -28,4 +28,4 @@ packages/
   shared-types/   Shared TypeScript types
 ```
 
-All Expo config is centralized in `@oxy.so/app-preset` — see `AGENTS.md`.
+All Expo config is centralized in `@oxy.so/app-preset` — see [`docs/agent-rules.md`](docs/agent-rules.md).
