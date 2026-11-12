@@ -68,7 +68,7 @@
     "tailwindcss": "4.3.2"
   },
   "devDependencies": {
-    "@oxy.so/ship": "2.0.0",
+    "@oxy.so/ship": "2.0.1",
     "@tailwindcss/postcss": "4.3.2",
     "@types/react": "~19.3.0",
     "@types/react-dom": "^19.2.3",
