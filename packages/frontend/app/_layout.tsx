@@ -62,7 +62,7 @@ export default function RootLayout() {
             <AppImageResolver>
               <LocaleProvider>
                 <AccountColor />
-                {/* Native Bloom surfaces (AliaChatSheet's BottomSheet) render only
+                {/* Native Bloom surfaces (GemieChatSheet's BottomSheet) render only
                     through this provider/outlet pair; the outlet sits AFTER the
                     content it paints over, and the boundary wraps everything else. */}
                 <PortalProvider>

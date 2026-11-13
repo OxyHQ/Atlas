@@ -15,10 +15,8 @@ sending. Completed mutations update the originating account's key, never the new
 account's key. The local star selection is also account-bound. Public catalogue
 caches remain separate and no local bearer or refresh logic is introduced.
 
-Alia renders through its shared SDK, including its conversation transport and
-account isolation. Release the SDK22 dependency only after it is published and
-Alia's phase-B API rollout is verified. A package publication alone does not
-confirm the recipient runtime is ready.
+Alia renders through the shared Gemies SDK (`@gemies/sdk`), including its
+conversation transport and account isolation.
 
 Validation: `bun run test:store`, frontend typecheck, lint and web export. The
 session tests cover switch/logout, delayed writes/deletes and completion after a
