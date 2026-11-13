@@ -19,9 +19,9 @@ mock.module('@oxy.so/bloom/button', () => ({
   Button: (props: React.PropsWithChildren<Record<string, unknown>>) =>
     createElement('FixtureButton', props),
 }));
-mock.module('@alia.onl/sdk/avatar', () => ({ AliaAvatarIcon: () => null }));
-mock.module('@alia.onl/sdk', () => ({
-  AliaChatSheet: forwardRef((props: Record<string, unknown>, ref) => {
+mock.module('@gemies/sdk/avatar', () => ({ GemieAvatarIcon: () => null }));
+mock.module('@gemies/sdk', () => ({
+  GemieChatSheet: forwardRef((props: Record<string, unknown>, ref) => {
     useImperativeHandle(ref, () => ({
       present: () => {
         presentations++;
