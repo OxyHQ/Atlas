@@ -1,4 +1,7 @@
+<<<<<<< HEAD
 import assert from 'node:assert/strict';
+=======
+>>>>>>> 86a0a81 (Record current Atlas panel paint reproduction for Bloom 527)
 import { createRequire } from 'node:module';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
@@ -6,7 +9,10 @@ const require = createRequire(process.env.PLAYWRIGHT_PACKAGE_JSON);
 // biome-ignore lint/correctness/noUnresolvedImports: resolved from the explicit harness installation above.
 const { chromium } = require('@playwright/test');
 const origin = 'http://localhost:8131';
+<<<<<<< HEAD
 const count = Number(process.env.FIXTURE_COUNT ?? 1);
+=======
+>>>>>>> 86a0a81 (Record current Atlas panel paint reproduction for Bloom 527)
 const output = process.env.BASELINE_OUTPUT ?? 'docs/audits/issue-663-rerun';
 mkdirSync(output, { recursive: true });
 const browser = await chromium.launch({
@@ -56,6 +62,7 @@ for (const mode of ['light', 'dark']) {
     if (u.pathname === '/store/categories') return json([]);
     if (u.pathname === '/store/apps')
       return json({
+<<<<<<< HEAD
         data: Array.from({ length: count }, (_, index) => ({
           id: `fixture-mail-${index}`,
           slug: `fixture-mail-${index}`,
@@ -65,6 +72,19 @@ for (const mode of ['light', 'dark']) {
           rating: { average: null, count: 0 },
           category: null,
         })),
+=======
+        data: [
+          {
+            id: 'fixture-mail',
+            slug: 'fixture-mail',
+            name: 'Fixture Mail',
+            tagline: 'One synthetic result',
+            icon: null,
+            rating: { average: null, count: 0 },
+            category: null,
+          },
+        ],
+>>>>>>> 86a0a81 (Record current Atlas panel paint reproduction for Bloom 527)
         pagination: { hasMore: false, total: 1, page: 1, limit: 100 },
       });
     if (u.pathname === '/session/user' || u.pathname === '/users/me')
@@ -82,6 +102,7 @@ for (const mode of ['light', 'dark']) {
   for (const width of [390, 1440]) {
     await page.setViewportSize({ width, height: width === 390 ? 844 : 900 });
     await page.waitForTimeout(700);
+<<<<<<< HEAD
     if (count > 1) {
       await page.evaluate(() => scrollTo(0, document.documentElement.scrollHeight));
       await page.waitForTimeout(700);
@@ -124,6 +145,11 @@ for (const mode of ['light', 'dark']) {
     const measurement = await page.evaluate(() => ({
       url: location.href,
       scrollY,
+=======
+    await page.screenshot({ path: `${output}/${mode}-${width}.png` });
+    const measurement = await page.evaluate(() => ({
+      url: location.href,
+>>>>>>> 86a0a81 (Record current Atlas panel paint reproduction for Bloom 527)
       width: innerWidth,
       height: innerHeight,
       scrollHeight: document.documentElement.scrollHeight,
@@ -164,6 +190,7 @@ for (const mode of ['light', 'dark']) {
         rect: n.getBoundingClientRect().toJSON(),
       })),
     }));
+<<<<<<< HEAD
     const lastResult = await page.getByText('Fixture Mail', { exact: true }).last().boundingBox();
     if (process.env.CANDIDATE === '1' && width === 390) {
       assert.deepEqual(
@@ -178,6 +205,9 @@ for (const mode of ['light', 'dark']) {
       );
     }
     report.frames.push({ mode, pixels, backingPixels, count, lastResult, ...measurement });
+=======
+    report.frames.push({ mode, ...measurement });
+>>>>>>> 86a0a81 (Record current Atlas panel paint reproduction for Bloom 527)
   }
   await context.close();
 }
