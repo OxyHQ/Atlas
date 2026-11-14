@@ -31,6 +31,8 @@ bun run doctor:oxy          # Oxy dependency check
   second copy of a store rule.
 - Keep the store public: no `(auth)` group and no cold-boot login gate, because a login wall hides
   the catalogue from its audience. Sign in on demand with `useAuth().signIn()` only to write a review.
+- First-party never asks people for permissions: this app acts for a person with `actingFor` on what
+  oxy's first-party registry declares (oxy ADR 0066); permissions, scopes and consent are only for third parties.
 - Render API-decided values as given: `average` is `null` (not `0`) with no reviews, and
   `authorUsesApp: false` renders as nothing.
 - Pass bare file ids to Bloom's `<Avatar source>`; never build an icon or image URL.
