@@ -9,7 +9,7 @@
         "@babel/plugin-transform-react-jsx": "7.29.7",
         "@babel/plugin-transform-typescript": "7.29.7",
         "@biomejs/biome": "2.5.15",
-        "@oxy.so/doctor": "1.8.0",
+        "@oxy.so/doctor": "1.10.0",
         "@types/react-test-renderer": "19.1.0",
         "babel-plugin-react-compiler": "1.0.0",
         "react-test-renderer": "19.3.0",
@@ -438,7 +438,7 @@
 
     "@oxy.so/core": ["@oxy.so/core@7.55.0", "", { "dependencies": { "@noble/ciphers": "^2.4.0", "@noble/curves": "^2.4.0", "@noble/hashes": "^2.4.0", "@oxy.so/contracts": "^7.5.0", "@oxy.so/protocol": "^1.11.1", "@oxy.so/telemetry": "^2.2.0", "@scure/bip39": "^2.4.0", "buffer": "^6.0.3", "express-rate-limit": "^8.6.0", "helmet": "^8.3.0", "invariant": "^2.2.4", "jwt-decode": "^4.0.0", "socket.io-client": "^4.8.4", "tldts": "^7.4.19", "zod": "^4.6.7" }, "peerDependencies": { "@aws-sdk/credential-provider-ini": ">=3.973.16 <4", "@aws-sdk/credential-provider-node": ">=3.972.83 <4", "@react-native-async-storage/async-storage": "<4.0.0", "expo-crypto": "<59.0.0", "expo-secure-store": "<59.0.0", "express": "^4.0.0 || ^5.0.0" }, "optionalPeers": ["@aws-sdk/credential-provider-ini", "@aws-sdk/credential-provider-node", "@react-native-async-storage/async-storage", "expo-crypto", "expo-secure-store", "express"] }, "sha512-Ug+Y2OaTwdDX91nm77vywRYIIJYwpIMZn0nYnWZLTWEx8LLxuf22Tu/Egrw7OYmNWYUELNGvwe66Gulu7GAEdw=="],
 
-    "@oxy.so/doctor": ["@oxy.so/doctor@1.8.0", "", { "dependencies": { "semver": "^7.7.4" }, "bin": { "oxy-doctor": "src/cli.mjs", "oxy-doctor-i18n": "src/i18n-cli.mjs", "oxy-emulator-preflight": "src/emulator-preflight.mjs", "oxy-doctor-expo-android": "src/expo-android.mjs" } }, "sha512-iL9yY2umG/2sj2ymmhqEljMQR1KgogTOndEC8fdHUPbPR6Y7npNWuW8ALuBkORUA5ItpeYnmaLRoK6ew6WrWtw=="],
+    "@oxy.so/doctor": ["@oxy.so/doctor@1.10.0", "", { "dependencies": { "semver": "^7.7.4" }, "bin": { "oxy-doctor": "src/cli.mjs", "oxy-doctor-i18n": "src/i18n-cli.mjs", "oxy-doctor-web-budget": "src/web-budget-cli.mjs", "oxy-emulator-preflight": "src/emulator-preflight.mjs", "oxy-doctor-expo-android": "src/expo-android.mjs" } }, "sha512-+aYJgb7g1P33rw/CYRYtjF68uYVBsPBBFhniSva4k9Y5ZqQGukaZJfACLGBgSv7tSLVpnaXKO/5LM9z71ItmfQ=="],
 
     "@oxy.so/protocol": ["@oxy.so/protocol@1.11.1", "", { "dependencies": { "@noble/curves": "^2.4.0", "@oxy.so/contracts": "^7.0.0" }, "peerDependencies": { "@react-native-async-storage/async-storage": "<4.0.0", "expo-crypto": "<59.0.0", "expo-modules-core": "<59.0.0", "expo-secure-store": "<59.0.0", "express": "^4.18.0 || ^5.0.0" }, "optionalPeers": ["@react-native-async-storage/async-storage", "expo-crypto", "expo-secure-store", "express"] }, "sha512-x1rVo+EJjQnnvQ5bRlPAovIqP2YkPGEeNQRWfHIxvu9RViBSSRW3C+03W4Yhcm3S9XsJvunvzm5yO5LmqRE91w=="],
 
