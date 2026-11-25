@@ -32,7 +32,7 @@
   },
   "overrides": {
     "@oxy.so/core": "7.55.0",
-    "@oxy.so/bloom": "23.7.0",
+    "@oxy.so/bloom": "23.8.1",
     "@oxy.so/contracts": "7.5.0",
     "@oxy.so/protocol": "1.11.1",
     "@oxy.so/services": "14.24.1",
@@ -41,7 +41,7 @@
   },
   "resolutions": {
     "@oxy.so/core": "7.55.0",
-    "@oxy.so/bloom": "23.7.0",
+    "@oxy.so/bloom": "23.8.1",
     "@oxy.so/contracts": "7.5.0",
     "@oxy.so/protocol": "1.11.1",
     "@oxy.so/services": "14.24.1",
